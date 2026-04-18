@@ -9,7 +9,6 @@ metadata:
 spec:
   project: default
   source:
-    # ── CHANGE THIS to your repo ──
     repoURL: https://github.com/bxker/homelab.git
     targetRevision: main
     path: kubernetes/apps
