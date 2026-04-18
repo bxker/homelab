@@ -1,0 +1,169 @@
+# Secrets and host-specific values live in .env (gitignored).
+# Create .env with: PROXMOX_URL, PROXMOX_API_TOKEN, PROXMOX_NODE
+[env]
+_.file = ".env"
+CP_IP = "192.168.1.100"
+W1_IP = "192.168.1.101"
+W2_IP = "192.168.1.102"
+CLUSTER_NAME = "homelab"
+
+# ── Tool Versions ──
+# `mise install` gets everything you need
+
+[tools]
+opentofu = "latest"
+kubectl  = "latest"
+helm     = "latest"
+ansible  = "latest"
+pipx = "latest"
+
+# ══════════════════════════════════════
+# Phase 1: Infrastructure
+# ══════════════════════════════════════
+
+[tasks.infra]
+description = "Provision VMs on Proxmox"
+run = """
+cd terraform
+tofu init
+tofu apply -auto-approve
+"""
+
+[tasks.infra-plan]
+description = "Preview infrastructure changes"
+run = "cd terraform && tofu init && tofu plan"
+
+[tasks.infra-destroy]
+description = "Tear down all VMs"
+run = "cd terraform && tofu destroy -auto-approve"
+
+# ══════════════════════════════════════
+# Phase 2: k3s Cluster
+# ══════════════════════════════════════
+
+[tasks.k3s-install]
+description = "Install k3s on all nodes and write kubeconfig"
+run = """
+echo "Waiting for VMs to boot..."
+for ip in "$CP_IP" "$W1_IP" "$W2_IP"; do
+  for i in $(seq 1 60); do
+    if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 ubuntu@$ip true 2>/dev/null; then
+      echo "  $ip is up"
+      break
+    fi
+    echo "  Waiting for $ip... ($i/60)"
+    sleep 5
+  done
+done
+
+cd ansible
+ansible-playbook -i inventory.yml playbooks/k3s.yml
+echo ""
+echo "k3s cluster ready. Try: kubectl get nodes"
+"""
+
+[tasks.cluster]
+description = "Full cluster setup (provision VMs + install k3s)"
+run = """
+mise run infra-destroy 2>/dev/null || true
+mise run infra
+mise run k3s-install
+"""
+
+# ══════════════════════════════════════
+# Phase 3: GitOps
+# ══════════════════════════════════════
+
+[tasks.gitops]
+description = "Install ArgoCD and deploy app-of-apps"
+run = """
+kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+
+echo "Installing ArgoCD..."
+kubectl apply -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.13.3/manifests/install.yaml
+kubectl apply -n argocd -f kubernetes/bootstrap/argocd-install.yaml
+
+echo "Waiting for ArgoCD to be ready..."
+kubectl wait --for=condition=available deployment/argocd-server \
+  -n argocd --timeout=300s
+
+echo "Deploying app-of-apps..."
+kubectl apply -f kubernetes/apps/app-of-apps.yaml
+
+echo ""
+echo "ArgoCD is running. Apps will sync automatically."
+echo "   Run: mise run argocd-password"
+echo "   Run: mise run argocd-ui"
+"""
+
+[tasks.argocd-password]
+description = "Get ArgoCD admin password"
+run = """
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath='{.data.password}' | base64 -d
+echo ""
+"""
+
+[tasks.argocd-ui]
+description = "Port-forward ArgoCD UI to localhost:8080"
+run = "kubectl port-forward svc/argocd-server -n argocd 8080:443"
+
+# ══════════════════════════════════════
+# Phase 4: Host Configuration
+# ══════════════════════════════════════
+
+[tasks.configure]
+description = "Run Ansible on Proxmox host"
+run = "cd ansible && ansible-playbook -i inventory.yml playbooks/proxmox.yml"
+
+# ══════════════════════════════════════
+# Lifecycle
+# ══════════════════════════════════════
+
+[tasks.all]
+description = "Run everything in order"
+depends = ["cluster", "gitops", "configure"]
+run = """
+echo ""
+echo "========================================="
+echo "  Homelab is up!"
+echo "  Run: mise run argocd-password"
+echo "  Run: mise run argocd-ui"
+echo "  Then open https://localhost:8080"
+echo "========================================="
+"""
+
+[tasks.destroy]
+description = "Tear it all down"
+depends = ["infra-destroy"]
+run = """
+echo "All VMs destroyed. Your Git repo still has everything to rebuild."
+echo "Run: mise run all"
+"""
+
+[tasks.status]
+description = "Show cluster and app status"
+run = """
+echo "=== Nodes ==="
+kubectl get nodes -o wide 2>/dev/null || echo "Cluster not reachable"
+
+echo ""
+echo "=== ArgoCD Apps ==="
+kubectl get applications -n argocd 2>/dev/null || echo "ArgoCD not installed"
+
+echo ""
+echo "=== LoadBalancer Services ==="
+kubectl get svc -A --field-selector spec.type=LoadBalancer 2>/dev/null || echo "None"
+"""
+
+[tasks.deps]
+description = "Build Helm chart dependencies for all wrapper charts"
+run = """
+for chart in kubernetes/apps/infrastructure/*/Chart.yaml kubernetes/apps/workloads/*/Chart.yaml; do
+  dir=$(dirname "$chart")
+  echo "Building deps for $dir..."
+  helm dependency build "$dir" 2>/dev/null || echo "  (no deps or already built)"
+done
+echo "All chart dependencies resolved"
+"""

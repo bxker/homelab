@@ -1,0 +1,23 @@
+# ArgoCD Bootstrap — the ONLY thing you kubectl apply manually.
+#
+# Usage:
+#   kubectl create namespace argocd
+#   kubectl apply -n argocd -f argocd-install.yaml
+#
+# Then get password:
+#   kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
+#
+# Pin a version by downloading the full manifest:
+#   curl -o argocd-install.yaml https://raw.githubusercontent.com/argoproj/argo-cd/v2.13.3/manifests/install.yaml
+#
+# For now, apply the upstream manifest directly:
+#   kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.13.3/manifests/install.yaml
+#   kubectl apply -f this-file.yaml  (for the config overlay below)
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmd-params-cm
+  namespace: argocd
+data:
+  server.insecure: "true"

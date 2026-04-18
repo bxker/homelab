@@ -1,0 +1,36 @@
+# Tailscale Kubernetes Operator
+#
+# Prerequisites:
+#   1. Create an OAuth client in Tailscale admin console:
+#      https://login.tailscale.com/admin/settings/oauth
+#      - Scopes: Devices (write)
+#   2. Create a K8s secret with the credentials BEFORE deploying:
+#      kubectl create namespace tailscale
+#      kubectl create secret generic operator-oauth \
+#        --namespace tailscale \
+#        --from-literal=client_id=<YOUR_CLIENT_ID> \
+#        --from-literal=client_secret=<YOUR_CLIENT_SECRET>
+#
+# Once deployed, expose any K8s service to your tailnet by annotating it:
+#   kubectl annotate svc my-service tailscale.com/expose=true
+#
+# Or make a service a Tailscale LoadBalancer:
+#   spec:
+#     type: LoadBalancer
+#     loadBalancerClass: tailscale
+
+tailscale-operator:
+  operatorConfig:
+    hostname: "homelab-k8s-operator"
+    logging: "info"
+    defaultTags: "tag:k8s-operator"
+
+  # The operator uses an existing secret for OAuth credentials
+  # (created manually — see prerequisites above)
+  oauth:
+    clientId: ""
+    clientSecret: ""
+
+  # Enable API server proxy — lets you kubectl over Tailscale
+  apiServerProxyConfig:
+    mode: "true"

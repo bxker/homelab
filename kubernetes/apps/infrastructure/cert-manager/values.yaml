@@ -1,0 +1,5 @@
+cert-manager:
+  crds:
+    enabled: true
+  prometheus:
+    enabled: true

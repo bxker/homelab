@@ -1,0 +1,18 @@
+longhorn:
+  defaultSettings:
+    defaultReplicaCount: 2
+    storageMinimalAvailablePercentage: 15
+    replicaAutoBalance: best-effort
+
+  persistence:
+    defaultClass: true
+    defaultClassReplicaCount: 2
+
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    host: longhorn.homelab.local
+    tls: true
+    tlsSecret: longhorn-tls
+    annotations:
+      cert-manager.io/cluster-issuer: homelab-ca

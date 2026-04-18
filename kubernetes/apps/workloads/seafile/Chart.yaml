@@ -1,0 +1,18 @@
+apiVersion: v2
+name: seafile
+version: 1.0.0
+description: Seafile file sync wrapper chart with MariaDB and Memcached
+dependencies:
+  # Official Seafile Helm chart (community edition)
+  - name: ce
+    version: "12.*"
+    repository: https://haiwen.github.io/seafile-helm-chart/repo
+    alias: seafile
+  # MariaDB for Seafile's database
+  - name: mariadb
+    version: "19.*"
+    repository: https://charts.bitnami.com/bitnami
+  # Memcached for Seafile's caching
+  - name: memcached
+    version: "7.*"
+    repository: https://charts.bitnami.com/bitnami

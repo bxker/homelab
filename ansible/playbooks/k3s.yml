@@ -1,0 +1,83 @@
+---
+- name: Install k3s control plane
+  hosts: k3s_cp
+  become: true
+
+  tasks:
+    - name: Wait for SSH to be available
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+
+    - name: Install k3s server
+      ansible.builtin.shell: |
+        curl -sfL https://get.k3s.io | sh -s - server \
+          --cluster-init \
+          --node-ip {{ ansible_host }} \
+          --tls-san {{ ansible_host }}
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Wait for k3s to be ready
+      ansible.builtin.wait_for:
+        path: /var/lib/rancher/k3s/server/node-token
+        timeout: 120
+
+    - name: Read node token
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: k3s_node_token
+
+    - name: Set token fact
+      ansible.builtin.set_fact:
+        k3s_token: "{{ k3s_node_token.content | b64decode | trim }}"
+
+    - name: Fetch kubeconfig
+      ansible.builtin.fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: /tmp/k3s-kubeconfig.yaml
+        flat: true
+
+- name: Fix kubeconfig server address
+  hosts: localhost
+  connection: local
+
+  tasks:
+    - name: Replace localhost with CP IP in kubeconfig
+      ansible.builtin.replace:
+        path: /tmp/k3s-kubeconfig.yaml
+        regexp: 'https://127\.0\.0\.1:6443'
+        replace: "https://{{ hostvars[groups['k3s_cp'][0]]['ansible_host'] }}:6443"
+
+    - name: Ensure ~/.kube exists
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/.kube"
+        state: directory
+        mode: "0700"
+
+    - name: Install kubeconfig
+      ansible.builtin.copy:
+        src: /tmp/k3s-kubeconfig.yaml
+        dest: "{{ ansible_env.HOME }}/.kube/config"
+        mode: "0600"
+
+- name: Install k3s workers
+  hosts: k3s_workers
+  become: true
+
+  vars:
+    k3s_cp_host: "{{ hostvars[groups['k3s_cp'][0]]['ansible_host'] }}"
+    k3s_token: "{{ hostvars[groups['k3s_cp'][0]]['k3s_token'] }}"
+
+  tasks:
+    - name: Wait for SSH to be available
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+
+    - name: Install k3s agent
+      ansible.builtin.shell: |
+        curl -sfL https://get.k3s.io | \
+          K3S_URL=https://{{ k3s_cp_host }}:6443 \
+          K3S_TOKEN={{ k3s_token }} \
+          sh -
+      args:
+        creates: /usr/local/bin/k3s

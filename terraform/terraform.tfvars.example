@@ -1,0 +1,16 @@
+# Copy to terraform.tfvars and fill in your values (never commit tfvars)
+
+proxmox_url       = "https://192.168.1.155:8006"
+proxmox_api_token = "root@pam!homelab=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+proxmox_node      = "pve"
+
+network_bridge  = "vmbr0"
+network_gateway = "192.168.1.254"
+
+# Your workstation's SSH public key — injected into VMs via cloud-init
+ssh_public_key = "ssh-ed25519 AAAA... you@host"
+
+k3s_cp_ip      = "192.168.1.100"
+k3s_worker_ips = ["192.168.1.101", "192.168.1.102"]
+
+storage_pool = "local-lvm"  # Use "local-zfs" if you chose ZFS during Proxmox install

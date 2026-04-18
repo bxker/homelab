@@ -1,0 +1,23 @@
+{{/*
+  Custom resources deployed alongside the upstream MetalLB chart.
+  This is the power of wrapper charts — you add your own templates
+  next to the subchart's resources.
+*/}}
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: homelab-pool
+  namespace: {{ .Release.Namespace }}
+spec:
+  addresses:
+    # ── CHANGE to a free range on your LAN outside DHCP scope ──
+    - 192.168.1.200-192.168.1.250
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: homelab-l2
+  namespace: {{ .Release.Namespace }}
+spec:
+  ipAddressPools:
+    - homelab-pool

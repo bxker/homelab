@@ -1,0 +1,57 @@
+---
+- name: Configure Proxmox VE host
+  hosts: proxmox
+  become: true
+  vars:
+    use_no_subscription_repo: true
+
+  tasks:
+  - name: Remove enterprise repo (no subscription)
+    ansible.builtin.file:
+      path: /etc/apt/sources.list.d/pve-enterprise.list
+      state: absent
+    when: use_no_subscription_repo
+
+  - name: Add no-subscription repo
+    ansible.builtin.apt_repository:
+      repo: "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription"
+      state: present
+      filename: pve-no-subscription
+    when: use_no_subscription_repo
+
+  - name: Update apt cache
+    ansible.builtin.apt:
+      update_cache: true
+      cache_valid_time: 3600
+
+  - name: Install essentials
+    ansible.builtin.apt:
+      name: [ vim, htop, curl, tmux, lm-sensors ]
+      state: present
+
+  - name: Enable IP forwarding
+    ansible.posix.sysctl:
+      name: net.ipv4.ip_forward
+      value: "1"
+      state: present
+      sysctl_set: true
+
+  - name: Disable root SSH password auth
+    ansible.builtin.lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: "^#?PasswordAuthentication"
+      line: "PasswordAuthentication no"
+    notify: restart sshd
+
+  - name: Nightly VM backup
+    ansible.builtin.cron:
+      name: "vzdump all VMs"
+      hour: "2"
+      minute: "0"
+      job: "vzdump --all --mode snapshot --storage local --compress zstd --quiet 1"
+
+  handlers:
+  - name: restart sshd
+    ansible.builtin.service:
+      name: sshd
+      state: restarted

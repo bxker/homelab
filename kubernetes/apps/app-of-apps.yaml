@@ -1,0 +1,34 @@
+# Root ArgoCD Application — discovers all wrapper charts in apps/
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    # ── CHANGE THIS to your repo ──
+    repoURL: https://github.com/bxker/homelab.git
+    targetRevision: main
+    path: kubernetes/apps
+    directory:
+      recurse: true
+      include: "application.yaml"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

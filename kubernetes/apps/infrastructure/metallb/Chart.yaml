@@ -1,0 +1,9 @@
+# Wrapper chart — pins upstream MetalLB and adds our IP pool config
+apiVersion: v2
+name: metallb
+version: 1.0.0
+description: MetalLB wrapper chart for homelab
+dependencies:
+  - name: metallb
+    version: "0.14.*"
+    repository: https://metallb.github.io/metallb

@@ -1,0 +1,46 @@
+# ── Seafile (upstream chart values) ──
+seafile:
+  initMode: true  # Set to false after first successful startup
+  seafile:
+    config:
+      seafileDataVolume:
+        storageClassName: longhorn
+        size: 20Gi
+    env:
+      - name: INIT_SEAFILE_ADMIN_EMAIL
+        value: "admin@homelab.local"
+      - name: INIT_SEAFILE_ADMIN_PASSWORD
+        value: "CHANGE_ME_BEFORE_DEPLOY"  # TODO: use sealed-secrets or SOPS
+      - name: SEAFILE_SERVER_HOSTNAME
+        value: "files.homelab.local"
+      - name: TIME_ZONE
+        value: "America/New_York"
+    secret: {}
+  service:
+    type: ClusterIP  # Exposed via our Ingress template below
+
+# ── MariaDB ──
+mariadb:
+  auth:
+    rootPassword: "CHANGE_ME_BEFORE_DEPLOY"  # TODO: use sealed-secrets
+    database: seafile
+    username: seafile
+    password: "CHANGE_ME_BEFORE_DEPLOY"      # TODO: use sealed-secrets
+  primary:
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: longhorn
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+# ── Memcached ──
+memcached:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi

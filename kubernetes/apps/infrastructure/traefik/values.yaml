@@ -1,0 +1,25 @@
+traefik:
+  deployment:
+    replicas: 1
+
+  service:
+    type: LoadBalancer
+
+  ports:
+    web:
+      redirectTo:
+        port: websecure
+    websecure:
+      tls:
+        enabled: true
+
+  logs:
+    general:
+      level: INFO
+    access:
+      enabled: true
+
+  ingressRoute:
+    dashboard:
+      enabled: true
+      matchRule: Host(`traefik.homelab.local`)

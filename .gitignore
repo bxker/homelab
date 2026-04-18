@@ -1,0 +1,13 @@
+# Terraform state (contains sensitive values)
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
+
+# Environment / secrets
+.env
+*.tfvars
+!terraform.tfvars.example
+
+# Large binaries
+*.iso

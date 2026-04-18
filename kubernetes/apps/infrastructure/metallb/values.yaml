@@ -1,0 +1,5 @@
+# Values passed to the upstream metallb subchart
+metallb:
+  speaker:
+    frr:
+      enabled: false  # L2 mode only, no BGP

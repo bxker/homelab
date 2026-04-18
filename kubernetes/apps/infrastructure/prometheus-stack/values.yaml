@@ -1,0 +1,33 @@
+kube-prometheus-stack:
+  grafana:
+    adminPassword: "CHANGE_ME_BEFORE_DEPLOY"  # TODO: use sealed-secrets or SOPS
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      hosts: ["grafana.homelab.local"]
+      tls:
+        - secretName: grafana-tls
+          hosts: ["grafana.homelab.local"]
+      annotations:
+        cert-manager.io/cluster-issuer: homelab-ca
+    persistence:
+      enabled: true
+      size: 5Gi
+
+  prometheus:
+    prometheusSpec:
+      retention: 15d
+      scrapeInterval: 30s
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Gi
+
+  alertmanager:
+    enabled: false  # Enable later when you set up notifications
+
+  nodeExporter:
+    enabled: true
