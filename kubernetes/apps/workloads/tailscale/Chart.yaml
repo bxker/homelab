@@ -5,4 +5,4 @@ description: Tailscale Kubernetes Operator wrapper chart
 dependencies:
   - name: tailscale-operator
     repository: https://pkgs.tailscale.com/helmcharts
-    version: "1.78.*"
+    version: "1.96.5"

@@ -19,7 +19,7 @@ resource "proxmox_virtual_environment_vm" "k3s_cp" {
 
   cpu {
     cores = var.k3s_cp_cores
-    type  = "x86-64-v2-AES"
+    type  = "host"
   }
 
   memory { dedicated = var.k3s_cp_memory }
@@ -78,7 +78,7 @@ resource "proxmox_virtual_environment_vm" "k3s_workers" {
 
   cpu {
     cores = var.k3s_worker_cores
-    type  = "x86-64-v2-AES"
+    type  = "host"
   }
 
   memory { dedicated = var.k3s_worker_memory }

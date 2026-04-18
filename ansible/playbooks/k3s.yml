@@ -101,6 +101,18 @@
         dest: /etc/resolv.conf
         mode: "0644"
 
+    - name: Install Longhorn prerequisites
+      ansible.builtin.apt:
+        name: [open-iscsi, nfs-common]
+        state: present
+        update_cache: true
+
+    - name: Enable iscsid
+      ansible.builtin.systemd:
+        name: iscsid
+        state: started
+        enabled: true
+
     - name: Install k3s agent
       ansible.builtin.shell: |
         curl -sfL https://get.k3s.io | \

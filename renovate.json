@@ -1,0 +1,17 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "helmv2": {
+    "fileMatch": ["kubernetes/.+/Chart\\.yaml$"]
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["helmv2"],
+      "matchUpdateTypes": ["major"],
+      "enabled": true,
+      "labels": ["major-update"]
+    }
+  ]
+}
