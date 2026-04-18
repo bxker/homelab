@@ -8,6 +8,10 @@
       ansible.builtin.wait_for_connection:
         timeout: 300
 
+    - name: Wait for cloud-init to finish
+      ansible.builtin.command: cloud-init status --wait
+      changed_when: false
+
     - name: Disable systemd-resolved (conflicts with k3s)
       ansible.builtin.systemd:
         name: systemd-resolved
@@ -86,6 +90,10 @@
     - name: Wait for SSH to be available
       ansible.builtin.wait_for_connection:
         timeout: 300
+
+    - name: Wait for cloud-init to finish
+      ansible.builtin.command: cloud-init status --wait
+      changed_when: false
 
     - name: Disable systemd-resolved (conflicts with k3s)
       ansible.builtin.systemd:
