@@ -1,0 +1,3 @@
+# No upstream chart — all resources are in templates/
+# Traefik MetalLB IP for *.homelab.local DNS rewrites
+traefikIP: "192.168.1.200"

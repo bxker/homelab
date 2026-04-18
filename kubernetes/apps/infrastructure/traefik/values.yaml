@@ -4,6 +4,9 @@ traefik:
 
   service:
     type: LoadBalancer
+    annotations:
+      tailscale.com/expose: "true"
+      tailscale.com/hostname: "homelab-traefik"
 
   ports:
     web:

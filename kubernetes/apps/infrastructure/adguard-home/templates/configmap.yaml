@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adguard-home-config
+data:
+  AdGuardHome.yaml: |
+    http:
+      pprof:
+        port: 6060
+        enabled: false
+      address: 0.0.0.0:3000
+      session_ttl: 720h
+    users: []
+    auth_attempts: 5
+    block_auth_min: 15
+    http_proxy: ""
+    language: en
+    theme: auto
+    dns:
+      bind_hosts:
+        - 0.0.0.0
+      port: 53
+      upstream_dns:
+        - 1.1.1.1
+        - 8.8.8.8
+      bootstrap_dns:
+        - 1.1.1.1
+      all_servers: false
+      fastest_addr: false
+      allowed_clients: []
+      disallowed_clients: []
+      blocked_hosts: []
+      cache_size: 4194304
+      cache_ttl_min: 0
+      cache_ttl_max: 0
+      rewrites:
+        - domain: "*.homelab.local"
+          answer: {{ .Values.traefikIP }}
+    filtering:
+      enabled: false
+    filters: []
+    whitelist_filters: []
+    user_rules: []
+    schema_version: 28
