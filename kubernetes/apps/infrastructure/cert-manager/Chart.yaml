@@ -4,5 +4,5 @@ version: 1.0.0
 description: cert-manager wrapper chart with self-signed CA
 dependencies:
   - name: cert-manager
-    version: "v1.16.*"
+    version: "1.20.*"
     repository: https://charts.jetstack.io
