@@ -14,9 +14,18 @@ spec:
       labels:
         app: adguard-home
     spec:
+      initContainers:
+        - name: copy-config
+          image: busybox:1.36
+          command: ["sh", "-c", "cp /tmp/config/AdGuardHome.yaml /opt/adguardhome/conf/AdGuardHome.yaml"]
+          volumeMounts:
+            - name: config-source
+              mountPath: /tmp/config
+            - name: config
+              mountPath: /opt/adguardhome/conf
       containers:
         - name: adguard-home
-          image: adguard/adguardhome:latest
+          image: adguard/adguardhome:v0.107.74
           ports:
             - name: dns-tcp
               containerPort: 53
@@ -39,8 +48,10 @@ spec:
             limits:
               memory: 256Mi
       volumes:
-        - name: config
+        - name: config-source
           configMap:
             name: adguard-home-config
+        - name: config
+          emptyDir: {}
         - name: data
           emptyDir: {}

@@ -47,7 +47,7 @@ resource "proxmox_virtual_environment_vm" "k3s_cp" {
       }
     }
     dns {
-      servers = ["192.168.1.1", "1.1.1.1"]
+      servers = ["1.1.1.1", "8.8.8.8"]
     }
     user_account {
       username = "ubuntu"
@@ -106,7 +106,7 @@ resource "proxmox_virtual_environment_vm" "k3s_workers" {
       }
     }
     dns {
-      servers = ["192.168.1.1", "1.1.1.1"]
+      servers = ["1.1.1.1", "8.8.8.8"]
     }
     user_account {
       username = "ubuntu"
