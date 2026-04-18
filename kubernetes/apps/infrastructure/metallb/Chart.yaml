@@ -5,5 +5,5 @@ version: 1.0.0
 description: MetalLB wrapper chart for homelab
 dependencies:
   - name: metallb
-    version: "0.14.*"
+    version: "0.15.*"
     repository: https://metallb.github.io/metallb
