@@ -3,12 +3,12 @@
   "extends": [
     "config:recommended"
   ],
-  "helmv2": {
-    "fileMatch": ["kubernetes/.+/Chart\\.yaml$"]
+  "helm-values": {
+    "managerFilePatterns": ["/kubernetes/.+/Chart\\.yaml$/"]
   },
   "packageRules": [
     {
-      "matchManagers": ["helmv2"],
+      "matchManagers": ["helm-values"],
       "matchUpdateTypes": ["major"],
       "enabled": true,
       "labels": ["major-update"]
