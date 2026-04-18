@@ -10,7 +10,7 @@ dependencies:
     alias: seafile
   # MariaDB for Seafile's database
   - name: mariadb
-    version: "19.*"
+    version: "25.*"
     repository: https://charts.bitnami.com/bitnami
   # Memcached for Seafile's caching
   - name: memcached
