@@ -4,5 +4,5 @@ version: 1.0.0
 description: kube-prometheus-stack wrapper (Prometheus + Grafana)
 dependencies:
   - name: kube-prometheus-stack
-    version: "65.*"
+    version: "83.*"
     repository: https://prometheus-community.github.io/helm-charts
