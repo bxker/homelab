@@ -1,4 +1,6 @@
 longhorn:
+  preUpgradeChecker:
+    jobEnabled: false
   defaultSettings:
     defaultReplicaCount: 2
     storageMinimalAvailablePercentage: 15

@@ -11,6 +11,7 @@
     - name: Wait for cloud-init to finish
       ansible.builtin.command: cloud-init status --wait
       changed_when: false
+      failed_when: false
 
     - name: Disable systemd-resolved (conflicts with k3s)
       ansible.builtin.systemd:
@@ -94,6 +95,7 @@
     - name: Wait for cloud-init to finish
       ansible.builtin.command: cloud-init status --wait
       changed_when: false
+      failed_when: false
 
     - name: Disable systemd-resolved (conflicts with k3s)
       ansible.builtin.systemd:
