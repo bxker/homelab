@@ -14,5 +14,5 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
   # Memcached for Seafile's caching
   - name: memcached
-    version: "7.*"
+    version: "8.*"
     repository: https://charts.bitnami.com/bitnami
