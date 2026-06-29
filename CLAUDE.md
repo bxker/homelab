@@ -13,11 +13,12 @@ IPs configured in `mise.toml` env vars and `terraform.tfvars` (both gitignored o
 All tasks run through `mise`:
 
 ```bash
-mise run all            # full deploy: infra → k3s-install → gitops → configure
+mise run all            # full deploy: cluster (destroy+provision+k3s) → gitops → configure
 mise run infra          # terraform apply (provision VMs)
 mise run k3s-install    # ansible: install k3s, write ~/.kube/config
 mise run gitops         # install ArgoCD + apply app-of-apps
 mise run configure      # ansible: harden Proxmox host
+mise run sync           # apply app-of-apps to existing cluster (not a full gitops reinstall)
 mise run status         # kubectl get nodes + ArgoCD apps + LB services
 mise run deps           # helm dependency build for all wrapper charts
 mise run destroy        # terraform destroy
@@ -39,7 +40,7 @@ helm template metallb . --namespace metallb-system
 
 2. **Ansible** (`ansible/playbooks/k3s.yml`) — installs k3s on control plane (`--cluster-init`), joins workers via node token, patches kubeconfig server address from `127.0.0.1` to the CP IP, writes to `~/.kube/config`.
 
-3. **ArgoCD** bootstrapped manually once (`kubernetes/bootstrap/argocd-install.yaml` — just a ConfigMap setting `server.insecure: "true"`; the full install YAML is applied separately). After bootstrap, ArgoCD self-manages everything.
+3. **ArgoCD** bootstrapped manually once via `mise run gitops` — applies the upstream v2.13.3 install manifest, then `kubernetes/bootstrap/argocd-install.yaml` (ConfigMap setting `server.insecure: "true"`). After bootstrap, ArgoCD self-manages everything. `kubernetes/bootstrap/argocd-ingress.yaml` adds a Traefik Ingress at `argocd.homelab.local` once Traefik is synced.
 
 ### GitOps Structure
 
@@ -69,7 +70,7 @@ ArgoCD runs `helm dependency build` automatically. Never commit the `charts/` di
 
 ### Sync Waves
 
-Infrastructure apps use `argocd.argoproj.io/sync-wave` annotations in `application.yaml` to control ordering (e.g., MetalLB before Traefik).
+All apps use `argocd.argoproj.io/sync-wave` annotations in `application.yaml` to control ordering. Approximate wave assignments: MetalLB (1) → Traefik / cert-manager / AdGuard Home (2) → Longhorn (3) → OpenBao / Prometheus Stack (4) → External Secrets Operator (5) → Tailscale (6) → Seafile (10).
 
 ### Adding a New App
 
@@ -79,6 +80,10 @@ Infrastructure apps use `argocd.argoproj.io/sync-wave` annotations in `applicati
 4. Commit and push — ArgoCD picks it up automatically
 
 Update `repoURL` in `app-of-apps.yaml` and all `application.yaml` files to your actual Git remote before first deploy.
+
+### GitHub Actions
+
+`.github/workflows/renovate-approve.yml` — auto-approves pull requests opened by the Renovate bot. Renovate is configured via `renovate.json` to watch `kubernetes/**/Chart.yaml` for upstream chart version bumps.
 
 ### Terraform Notes
 

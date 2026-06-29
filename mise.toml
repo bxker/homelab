@@ -134,6 +134,10 @@ echo "  Then open https://localhost:8080"
 echo "========================================="
 """
 
+[tasks.sync]
+description = "Push app-of-apps to ArgoCD (use on existing cluster instead of gitops)"
+run = "kubectl apply -f kubernetes/apps/app-of-apps.yaml"
+
 [tasks.destroy]
 description = "Tear it all down"
 depends = ["infra-destroy"]
@@ -155,6 +159,78 @@ kubectl get applications -n argocd 2>/dev/null || echo "ArgoCD not installed"
 echo ""
 echo "=== LoadBalancer Services ==="
 kubectl get svc -A --field-selector spec.type=LoadBalancer 2>/dev/null || echo "None"
+"""
+
+# ══════════════════════════════════════
+# OpenBao (Secrets Management)
+# Run once after first gitops deploy:
+#   mise run vault-init   → initialize, save printed keys to password manager
+#   mise run vault-unseal → unseal (repeat after pod restarts)
+#   mise run vault-setup  → configure k8s auth + ESO policy
+#   vault kv put secret/tailscale client_id=xxx client_secret=yyy
+# ══════════════════════════════════════
+
+[tasks.vault-init]
+description = "Initialize OpenBao (run once after first deploy)"
+run = """
+kubectl port-forward -n openbao svc/openbao 8200:8200 &
+PF_PID=$!
+sleep 3
+export VAULT_ADDR=http://127.0.0.1:8200
+bao operator init -key-shares=3 -key-threshold=2
+kill $PF_PID 2>/dev/null
+echo ""
+echo "Save the unseal keys and root token to your password manager."
+echo "You need 2 of 3 keys to unseal."
+"""
+
+[tasks.vault-unseal]
+description = "Unseal OpenBao (needed after pod restarts)"
+run = """
+kubectl port-forward -n openbao svc/openbao 8200:8200 &
+PF_PID=$!
+sleep 3
+export VAULT_ADDR=http://127.0.0.1:8200
+echo "Enter unseal key 1:"; bao operator unseal
+echo "Enter unseal key 2:"; bao operator unseal
+kill $PF_PID 2>/dev/null
+bao status
+"""
+
+[tasks.vault-setup]
+description = "Configure OpenBao k8s auth and ESO policy (run once after vault-init)"
+run = """
+kubectl port-forward -n openbao svc/openbao 8200:8200 &
+PF_PID=$!
+sleep 3
+export VAULT_ADDR=http://127.0.0.1:8200
+
+echo "Root token: "; read -s VAULT_TOKEN; export VAULT_TOKEN
+
+bao secrets enable -path=secret kv-v2
+
+bao auth enable kubernetes
+bao write auth/kubernetes/config \
+  kubernetes_host="https://kubernetes.default.svc:443"
+
+bao policy write external-secrets - <<'EOF'
+path "secret/data/*" {
+  capabilities = ["read"]
+}
+EOF
+
+bao write auth/kubernetes/role/external-secrets \
+  bound_service_account_names=external-secrets \
+  bound_service_account_namespaces=external-secrets \
+  policies=external-secrets \
+  ttl=24h
+
+kill $PF_PID 2>/dev/null
+echo ""
+echo "OpenBao configured. Now write secrets:"
+echo "  export VAULT_ADDR=http://127.0.0.1:8200"
+echo "  export VAULT_TOKEN=<root-token>"
+echo "  bao kv put secret/tailscale client_id=xxx client_secret=yyy"
 """
 
 [tasks.deps]

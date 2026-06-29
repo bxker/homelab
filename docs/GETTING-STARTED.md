@@ -113,21 +113,41 @@ kubectl get svc -n traefik
 #   192.168.1.201  longhorn.homelab.local
 ```
 
-## Step 6: Set Up Tailscale
+## Step 6: Bootstrap OpenBao (Secrets Manager)
 
-Before Tailscale deploys, create the OAuth secret:
+After `mise run gitops`, OpenBao deploys but needs a one-time initialization:
+
+```bash
+# Initialize — prints 3 unseal keys + root token. Save all to password manager.
+mise run vault-init
+
+# Unseal (enter 2 of the 3 unseal keys when prompted)
+mise run vault-unseal
+
+# Configure Kubernetes auth + ESO policy
+mise run vault-setup
+# (prompts for root token)
+```
+
+Then write secrets into OpenBao:
+
+```bash
+kubectl port-forward -n openbao svc/openbao 8200:8200 &
+export VAULT_ADDR=http://127.0.0.1:8200
+export VAULT_TOKEN=<root-token>
+
+# Tailscale OAuth credentials (from Step 7 below)
+bao kv put secret/tailscale client_id=YOUR_ID client_secret=YOUR_SECRET
+```
+
+> **Note:** OpenBao must be re-unsealed after every pod restart (2 of 3 keys). Run `mise run vault-unseal` when the pod restarts.
+
+## Step 7: Set Up Tailscale
 
 1. Go to https://login.tailscale.com/admin/settings/oauth
 2. Create OAuth client with **Devices: Write** scope
-3. Create the K8s secret:
-   ```bash
-   kubectl create namespace tailscale
-   kubectl create secret generic operator-oauth \
-     --namespace tailscale \
-     --from-literal=client_id=YOUR_ID \
-     --from-literal=client_secret=YOUR_SECRET
-   ```
-4. ArgoCD will deploy the operator automatically
+3. Write credentials to OpenBao (see Step 6 above) — External Secrets Operator creates the K8s secret automatically
+4. ArgoCD deploys the operator once the secret exists
 5. Expose any service to your tailnet:
    ```bash
    kubectl annotate svc grafana -n monitoring tailscale.com/expose=true
