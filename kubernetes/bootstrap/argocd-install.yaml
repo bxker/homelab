@@ -21,3 +21,15 @@ metadata:
   namespace: argocd
 data:
   server.insecure: "true"
+---
+# Ignore terminatingReplicas in Deployment status globally — added in k8s 1.32,
+# not yet in ArgoCD's schema, causes ComparisonError on every app with Deployments.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+data:
+  resource.customizations.ignoreDifferences.apps_Deployment: |
+    jsonPointers:
+    - /status/terminatingReplicas
