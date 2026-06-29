@@ -1,0 +1,22 @@
+openbao:
+  global:
+    enabled: true
+    tlsDisable: true  # TLS handled at ingress (Traefik)
+
+  injector:
+    enabled: false  # Using External Secrets Operator instead
+
+  server:
+    dev:
+      enabled: false
+
+    ha:
+      enabled: false
+
+    dataStorage:
+      enabled: true
+      size: 5Gi
+      storageClass: longhorn
+
+    service:
+      type: ClusterIP

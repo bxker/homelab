@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: prometheus-stack
+  name: openbao
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "4"
@@ -10,15 +10,10 @@ spec:
   source:
     repoURL: https://github.com/bxker/homelab.git
     targetRevision: main
-    path: kubernetes/apps/infrastructure/prometheus-stack
+    path: kubernetes/apps/infrastructure/openbao
   destination:
     server: https://kubernetes.default.svc
-    namespace: monitoring
-  ignoreDifferences:
-    - group: monitoring.coreos.com
-      kind: Prometheus
-      jsonPointers:
-        - /status/terminatingReplicas
+    namespace: openbao
   syncPolicy:
     automated: { prune: true, selfHeal: true }
     syncOptions: [CreateNamespace=true, ServerSideApply=true]

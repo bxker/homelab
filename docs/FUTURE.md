@@ -18,13 +18,6 @@ focused. Each section includes enough context to pick it up when you're ready.
 - Tiny PVC (1 GB), very low resource usage
 - Expose via Traefik Ingress with TLS
 
-### Pi-hole / AdGuard Home (DNS)
-- Network-wide ad blocking
-- Can run in K8s with MetalLB giving it a static LAN IP for DNS
-- Or run in a dedicated LXC container (simpler for DNS bootstrapping)
-- Once running, point your router's DHCP DNS to it
-- Add local DNS records for `*.homelab.local` → Traefik LB IP
-
 ### Nextcloud / Media Server
 - If Seafile doesn't cover your needs, Nextcloud has calendars, contacts, etc.
 - Heavy on resources (~1 GB RAM minimum)
@@ -48,12 +41,6 @@ focused. Each section includes enough context to pick it up when you're ready.
 - NFS server for bulk file storage
 - Docker host for anything that doesn't fit in K8s
 - Add `terraform/services-lxc.tf` and Ansible playbook
-
-### Secrets Management
-- **Sealed Secrets** — encrypt secrets in Git, controller decrypts in cluster
-- **SOPS + age** — encrypt YAML values, decrypt at sync time
-- **External Secrets Operator** — pull from Vault, AWS SSM, etc.
-- For homelab, SOPS + age is the sweet spot (no extra controller needed)
 
 ### Automated Backups
 - **Velero** — K8s-native backup/restore for PVCs and resources
@@ -89,7 +76,6 @@ focused. Each section includes enough context to pick it up when you're ready.
 - Update k3s server config with `--tls-san` pointing to the VIP
 
 ### GitOps Improvements
-- **Renovate Bot** — auto-creates PRs when upstream chart versions update
 - **ArgoCD Image Updater** — auto-bumps container image tags
 - **Pre-commit hooks** — lint Helm charts and YAML before pushing
 
