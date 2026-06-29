@@ -1,19 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: tailscale
+  name: external-secrets
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-wave: "5"
 spec:
   project: default
   source:
     repoURL: https://github.com/bxker/homelab.git
     targetRevision: main
-    path: kubernetes/apps/workloads/tailscale
+    path: kubernetes/apps/infrastructure/external-secrets
   destination:
     server: https://kubernetes.default.svc
-    namespace: tailscale
+    namespace: external-secrets
   syncPolicy:
     automated: { prune: true, selfHeal: true }
     syncOptions: [CreateNamespace=true]

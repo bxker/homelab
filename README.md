@@ -23,6 +23,9 @@ Infrastructure-as-code managed homelab. Single mini PC today, multi-node tomorro
 │    Traefik          │   Seafile                             │
 │    cert-manager     │   Tailscale                           │
 │    Longhorn         │                                       │
+│    AdGuard Home     │                                       │
+│    OpenBao          │                                       │
+│    Ext. Secrets     │                                       │
 └─────────────────────────────────────────────────────────────┘
 
         ▲ All managed by ArgoCD (GitOps)
@@ -64,7 +67,8 @@ homelab/
 │
 ├── kubernetes/                ← GitOps manifests (wrapper charts)
 │   ├── bootstrap/
-│   │   └── argocd-install.yaml
+│   │   ├── argocd-install.yaml
+│   │   └── argocd-ingress.yaml
 │   └── apps/
 │       ├── app-of-apps.yaml
 │       ├── infrastructure/
@@ -72,10 +76,17 @@ homelab/
 │       │   ├── traefik/
 │       │   ├── cert-manager/
 │       │   ├── longhorn/
-│       │   └── prometheus-stack/
+│       │   ├── prometheus-stack/
+│       │   ├── adguard-home/
+│       │   ├── openbao/
+│       │   └── external-secrets/
 │       └── workloads/
 │           ├── seafile/
 │           └── tailscale/
+│
+├── .github/
+│   └── workflows/
+│       └── renovate-approve.yml
 │
 └── docs/
     ├── GETTING-STARTED.md     ← Start here
@@ -100,8 +111,11 @@ mise run k3s-install
 
 # Phase 3: Deploy ArgoCD → it syncs everything else
 kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.13.3/manifests/install.yaml
 kubectl apply -n argocd -f kubernetes/bootstrap/argocd-install.yaml
 kubectl apply -f kubernetes/apps/app-of-apps.yaml
+# After Traefik syncs, apply the ArgoCD ingress:
+kubectl apply -f kubernetes/bootstrap/argocd-ingress.yaml
 
 # Phase 4: Configure Proxmox host
 cd ansible && ansible-playbook -i inventory.yml playbooks/proxmox.yml
