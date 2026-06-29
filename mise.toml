@@ -193,8 +193,8 @@ sleep 3
 export VAULT_ADDR=http://127.0.0.1:8200
 echo "Enter unseal key 1:"; bao operator unseal
 echo "Enter unseal key 2:"; bao operator unseal
-kill $PF_PID 2>/dev/null
 bao status
+kill $PF_PID 2>/dev/null
 """
 
 [tasks.vault-setup]
@@ -207,11 +207,19 @@ export VAULT_ADDR=http://127.0.0.1:8200
 
 echo "Root token: "; read -s VAULT_TOKEN; export VAULT_TOKEN
 
-bao secrets enable -path=secret kv-v2
+bao secrets list | grep -q '^secret/' || bao secrets enable -path=secret kv-v2
 
-bao auth enable kubernetes
+bao auth list | grep -q '^kubernetes/' || bao auth enable kubernetes
+
+# Provide CA cert and reviewer JWT explicitly for k3s compatibility
+K8S_CA=$(kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 -d)
+REVIEWER_JWT=$(kubectl create token openbao -n openbao --duration=8760h 2>/dev/null || \
+  kubectl get secret -n openbao -o jsonpath='{.items[?(@.type=="kubernetes.io/service-account-token")].data.token}' | base64 -d)
+
 bao write auth/kubernetes/config \
-  kubernetes_host="https://kubernetes.default.svc:443"
+  kubernetes_host="https://kubernetes.default.svc:443" \
+  kubernetes_ca_cert="$K8S_CA" \
+  token_reviewer_jwt="$REVIEWER_JWT"
 
 bao policy write external-secrets - <<'EOF'
 path "secret/data/*" {
@@ -227,10 +235,23 @@ bao write auth/kubernetes/role/external-secrets \
 
 kill $PF_PID 2>/dev/null
 echo ""
-echo "OpenBao configured. Now write secrets:"
+echo "OpenBao configured. Run 'mise run vault-write' to add secrets."
+"""
+
+[tasks.vault-write]
+description = "Open a port-forward to write secrets into OpenBao"
+run = """
+kubectl port-forward -n openbao svc/openbao 8200:8200 &
+PF_PID=$!
+sleep 3
+export VAULT_ADDR=http://127.0.0.1:8200
+echo "Port-forward ready. In another terminal:"
 echo "  export VAULT_ADDR=http://127.0.0.1:8200"
 echo "  export VAULT_TOKEN=<root-token>"
 echo "  bao kv put secret/tailscale client_id=xxx client_secret=yyy"
+echo ""
+echo "Press Ctrl-C when done."
+wait $PF_PID
 """
 
 [tasks.deps]
