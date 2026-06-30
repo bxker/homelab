@@ -11,3 +11,7 @@ terraform/.terraform.lock.hcl
 
 # Large binaries
 *.iso
+
+# Helm dependency artifacts (ArgoCD runs `helm dependency build` itself)
+kubernetes/apps/**/charts/
+kubernetes/apps/**/Chart.lock

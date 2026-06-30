@@ -7,25 +7,19 @@ seafile:
         storageClassName: longhorn
         size: 20Gi
     env:
-      - name: INIT_SEAFILE_ADMIN_EMAIL
-        value: "admin@homelab.local"
-      - name: INIT_SEAFILE_ADMIN_PASSWORD
-        value: "CHANGE_ME_BEFORE_DEPLOY"  # TODO: use sealed-secrets or SOPS
-      - name: SEAFILE_SERVER_HOSTNAME
-        value: "files.homelab.local"
-      - name: TIME_ZONE
-        value: "America/New_York"
-    secret: {}
+      INIT_SEAFILE_ADMIN_EMAIL: "admin@homelab.local"
+      SEAFILE_SERVER_HOSTNAME: "files.homelab.local"
+      TIME_ZONE: "America/New_York"
+      DB_HOST: "seafile-mariadb"
   service:
     type: ClusterIP  # Exposed via our Ingress template below
 
 # ── MariaDB ──
 mariadb:
   auth:
-    rootPassword: "CHANGE_ME_BEFORE_DEPLOY"  # TODO: use sealed-secrets
+    existingSecret: seafile-mariadb-secret  # populated by ExternalSecret from OpenBao
     database: seafile
     username: seafile
-    password: "CHANGE_ME_BEFORE_DEPLOY"      # TODO: use sealed-secrets
   primary:
     persistence:
       enabled: true

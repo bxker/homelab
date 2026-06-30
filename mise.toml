@@ -249,6 +249,7 @@ echo "Port-forward ready. In another terminal:"
 echo "  export VAULT_ADDR=http://127.0.0.1:8200"
 echo "  export VAULT_TOKEN=<root-token>"
 echo "  bao kv put secret/tailscale client_id=xxx client_secret=yyy"
+echo "  bao kv put secret/seafile admin_password=xxx jwt_private_key=yyy db_password=zzz db_root_password=www"
 echo ""
 echo "Press Ctrl-C when done."
 wait $PF_PID
