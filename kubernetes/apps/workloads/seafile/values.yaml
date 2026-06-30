@@ -14,24 +14,22 @@ seafile:
   service:
     type: ClusterIP  # Exposed via our Ingress template below
 
-# ── MariaDB ──
-mariadb:
-  auth:
-    existingSecret: seafile-mariadb-secret  # populated by ExternalSecret from OpenBao
-    database: seafile
-    username: seafile
-  primary:
-    persistence:
-      enabled: true
-      size: 5Gi
-      storageClass: longhorn
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
+# ── MariaDB (hand-rolled, templates/mariadb.yaml) ──
+database:
+  image: "mariadb:11.4"
+  database: seafile
+  username: seafile
+  storageClassName: longhorn
+  size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
 
-# ── Memcached ──
-memcached:
+# ── Memcached (hand-rolled, templates/memcached.yaml) ──
+cache:
+  image: "memcached:1.6-alpine"
+  memoryLimitMb: 128
   resources:
     requests:
       cpu: 50m

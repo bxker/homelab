@@ -8,11 +8,6 @@ dependencies:
     version: "12.*"
     repository: https://haiwen.github.io/seafile-helm-chart/repo
     alias: seafile
-  # MariaDB for Seafile's database
-  - name: mariadb
-    version: "19.*"
-    repository: https://charts.bitnami.com/bitnami
-  # Memcached for Seafile's caching
-  - name: memcached
-    version: "7.*"
-    repository: https://charts.bitnami.com/bitnami
+# MariaDB and Memcached are hand-rolled in templates/ using official upstream
+# images directly (mariadb:11.4, memcached:1.6) — Bitnami pulled versioned
+# tags from docker.io behind a paid subscription in 2025.

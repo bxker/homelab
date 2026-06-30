@@ -19,6 +19,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ .Release.Name }}-seafile
+                name: seafile
                 port:
                   number: 80
