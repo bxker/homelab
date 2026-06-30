@@ -1,6 +1,6 @@
 # ── Seafile (upstream chart values) ──
 seafile:
-  initMode: true  # Set to false after first successful startup
+  initMode: false  # First successful startup completed
   seafile:
     config:
       seafileDataVolume:
