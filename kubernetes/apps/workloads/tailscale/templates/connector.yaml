@@ -4,6 +4,7 @@ metadata:
   name: homelab-subnet-router
 spec:
   hostname: homelab-subnet-router
+  proxyClass: homelab-proxy
   tags:
     - "tag:k8s-operator"
   subnetRouter:

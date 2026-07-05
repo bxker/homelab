@@ -1,0 +1,14 @@
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: homelab-proxy
+spec:
+  statefulSet:
+    pod:
+      tailscaleContainer:
+        env:
+          # k3s uses nftables; the operator's "auto" detection can misfire and
+          # skip installing the SNAT/MSS rules, which black-holes subnet-router
+          # return traffic. Force nftables so masquerade + MSS clamp apply.
+          - name: TS_DEBUG_FIREWALL_MODE
+            value: nftables
