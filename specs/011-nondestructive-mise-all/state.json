@@ -14,7 +14,7 @@
   "size": "small",
   "mode": "inline",
   "delivery": "normal",
-  "stage": "implement",
+  "stage": "deliver",
   "gates": {
     "spec": "approved",
     "plan": "skipped",
@@ -30,7 +30,8 @@
     "build": null,
     "validate": [
       "python3 -c 'import tomllib;tomllib.load(open(\"mise.toml\",\"rb\"))'",
-      "bash -n on each [tasks.*].run script (extracted via tomllib)"
+      "bash -n on each [tasks.*].run script (extracted via tomllib)",
+      "python3 -I specs/011-nondestructive-mise-all/verify_tasks.py ."
     ],
     "plan": null,
     "baseline_failures": []
@@ -40,7 +41,7 @@
       "id": "T1",
       "title": "Rework mise tasks + docs",
       "agent": "engine",
-      "status": "in_progress",
+      "status": "done",
       "attempts": 1,
       "files": [
         "mise.toml",
@@ -56,7 +57,8 @@
         "AC4",
         "AC5"
       ],
-      "review": "batch"
+      "review": "batch",
+      "commit": "a272ba6"
     }
   ],
   "blocked": null,
@@ -65,12 +67,18 @@
     "stage_started_at": {
       "intake": "2026-10-13T00:57:14Z",
       "spec": "2026-10-13T00:57:34Z",
-      "implement": "2026-10-13T01:05:00Z"
+      "implement": "2026-10-13T01:05:00Z",
+      "verify": "2026-10-13T01:52:30Z",
+      "document": "2026-10-13T01:53:00Z",
+      "deliver": "2026-10-13T01:54:00Z"
     },
     "gates": {
       "spec": {
         "presented_at": "2026-10-13T00:58:00Z",
         "approved_at": "2026-10-13T01:05:00Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T01:54:00Z"
       }
     },
     "gate_rework": {
@@ -79,10 +87,11 @@
       "deliver": 0
     },
     "reviews": {
-      "total": 0,
-      "first_pass": 0
+      "total": 1,
+      "first_pass": 1
     },
     "retries": 0,
     "interventions": 0
-  }
+  },
+  "living": []
 }
