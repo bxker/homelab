@@ -2,7 +2,24 @@
   Custom resources deployed alongside the upstream MetalLB chart.
   This is the power of wrapper charts — you add your own templates
   next to the subchart's resources.
+
+  Two pools, both outside the router's DHCP scope:
+  - homelab-static: never handed out automatically. Services opt in with
+    the annotation `metallb.io/loadBalancerIPs: <ip>`. Current pins (keep
+    docs/GETTING-STARTED.md "IP Address Plan" in sync):
+      .200 Traefik · .201 AdGuard DNS · .203 AdGuard UI
+  - homelab-pool: everything else gets the next free IP from here.
 */}}
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: homelab-static
+  namespace: {{ .Release.Namespace }}
+spec:
+  autoAssign: false
+  addresses:
+    - 192.168.1.200-192.168.1.209
+---
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
@@ -10,8 +27,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   addresses:
-    # ── CHANGE to a free range on your LAN outside DHCP scope ──
-    - 192.168.1.200-192.168.1.250
+    - 192.168.1.210-192.168.1.250
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
@@ -20,4 +36,5 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   ipAddressPools:
+    - homelab-static
     - homelab-pool

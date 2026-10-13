@@ -109,12 +109,13 @@ mise run argocd-password
 mise run argocd-ui
 # Open https://localhost:8080
 
-# Check what MetalLB assigned to Traefik
+# Traefik is pinned to 192.168.1.200 (see IP Address Plan)
 kubectl get svc -n traefik
-# EXTERNAL-IP is your ingress IP — add to /etc/hosts:
-#   192.168.1.201  grafana.homelab.local
-#   192.168.1.201  files.homelab.local
-#   192.168.1.201  longhorn.homelab.local
+# Point your router's DHCP DNS at AdGuard (192.168.1.201) so *.homelab.local
+# resolves everywhere, or add entries to /etc/hosts:
+#   192.168.1.200  grafana.homelab.local
+#   192.168.1.200  files.homelab.local
+#   192.168.1.200  longhorn.homelab.local
 ```
 
 ## Step 6: Bootstrap OpenBao (Secrets Manager)
@@ -193,4 +194,13 @@ is still attached to the old pod on another node. Delete the old pod to let it m
 | 192.168.1.100   | k3s-cp-1                 |
 | 192.168.1.101   | k3s-worker-1             |
 | 192.168.1.102   | k3s-worker-2             |
-| .200–.250       | MetalLB pool (K8s LBs)   |
+| .200–.209       | MetalLB `homelab-static`: pinned only, never auto-assigned |
+| 192.168.1.200   | Traefik (all `*.homelab.local` Ingresses) |
+| 192.168.1.201   | AdGuard Home DNS: set as the router's DHCP DNS server |
+| 192.168.1.203   | AdGuard Home web UI      |
+| .210–.250       | MetalLB `homelab-pool`: any other LoadBalancer |
+
+To pin another Service, pick a free IP in .200–.209, add the annotation
+`metallb.io/loadBalancerIPs: <ip>`, and list it here and in
+`kubernetes/apps/infrastructure/metallb/templates/pool.yaml`. If you change Traefik's IP,
+change `traefikIP` in `kubernetes/apps/infrastructure/adguard-home/values.yaml` with it.

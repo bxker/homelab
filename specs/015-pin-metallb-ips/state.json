@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "ticket": {
+    "source": "github",
+    "ref": "gh:15",
+    "id": "15",
+    "title": "[P0] Pin MetalLB IPs for Traefik and AdGuard DNS (race can break *.homelab.local)",
+    "url": "https://github.com/bxker/homelab/issues/15",
+    "pr": "https://github.com/bxker/homelab/pull/45"
+  },
+  "slug": "015-pin-metallb-ips",
+  "branch": "015-pin-metallb-ips",
+  "base": "main",
+  "size": "standard",
+  "mode": "fallback",
+  "delivery": "normal",
+  "stage": "done",
+  "gates": {
+    "spec": "approved",
+    "plan": "approved",
+    "deliver": "approved"
+  },
+  "domains": [
+    "kubernetes",
+    "gitops"
+  ],
+  "targets": {},
+  "commands": {
+    "test": null,
+    "lint": null,
+    "build": null,
+    "validate": [
+      "helm template traefik / adguard-home / metallb (scratchpad helm v3.16.4, vendored charts)",
+      "offline IP consistency check"
+    ],
+    "plan": null,
+    "baseline_failures": []
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Split MetalLB pool",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "kubernetes/apps/infrastructure/metallb/templates/pool.yaml"
+      ],
+      "criteria": [
+        "AC5"
+      ],
+      "review": "each",
+      "commit": "34cfa9b",
+      "red": "assertion"
+    },
+    {
+      "id": "T2",
+      "title": "Pin Traefik and AdGuard Services",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "kubernetes/apps/infrastructure/traefik/values.yaml",
+        "kubernetes/apps/infrastructure/adguard-home/templates/service.yaml",
+        "kubernetes/apps/infrastructure/adguard-home/values.yaml"
+      ],
+      "criteria": [
+        "AC1",
+        "AC2",
+        "AC3"
+      ],
+      "review": "each",
+      "commit": "1d87c3e",
+      "red": "assertion"
+    },
+    {
+      "id": "T3",
+      "title": "IP plan in docs",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "docs/GETTING-STARTED.md"
+      ],
+      "criteria": [
+        "AC4"
+      ],
+      "review": "batch",
+      "commit": "8be5882"
+    }
+  ],
+  "blocked": null,
+  "metrics": {
+    "started_at": "2026-10-13T03:19:12Z",
+    "stage_started_at": {
+      "intake": "2026-10-13T03:19:12Z",
+      "spec": "2026-10-13T03:20:00Z",
+      "plan": "2026-10-13T03:21:15Z",
+      "implement": "2026-10-13T03:23:48Z",
+      "verify": "2026-10-13T03:24:48Z",
+      "document": "2026-10-13T03:25:11Z",
+      "deliver": "2026-10-13T03:25:11Z",
+      "done": "2026-10-13T03:25:55Z"
+    },
+    "gates": {
+      "spec": {
+        "presented_at": "2026-10-13T03:19:50Z",
+        "approved_at": "2026-10-13T03:21:15Z"
+      },
+      "plan": {
+        "presented_at": "2026-10-13T03:22:04Z",
+        "approved_at": "2026-10-13T03:23:48Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T03:25:11Z",
+        "approved_at": "2026-10-13T03:25:55Z"
+      }
+    },
+    "gate_rework": {
+      "spec": 0,
+      "plan": 0,
+      "deliver": 0
+    },
+    "reviews": {
+      "total": 3,
+      "first_pass": 3
+    },
+    "retries": 0,
+    "interventions": 0
+  },
+  "living": []
+}
