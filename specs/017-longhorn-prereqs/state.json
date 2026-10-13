@@ -14,7 +14,7 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "implement",
+  "stage": "deliver",
   "gates": {
     "spec": "approved",
     "plan": "approved",
@@ -41,7 +41,7 @@
       "id": "T1",
       "title": "Prereq play for all k3s nodes",
       "agent": "implementer",
-      "status": "in_progress",
+      "status": "done",
       "attempts": 1,
       "files": [
         "ansible/playbooks/k3s.yml"
@@ -53,21 +53,23 @@
         "AC4"
       ],
       "review": "each",
-      "red": "assertion"
+      "red": "assertion",
+      "commit": "9f52668"
     },
     {
       "id": "T2",
       "title": "Docs",
       "agent": "implementer",
-      "status": "todo",
-      "attempts": 0,
+      "status": "done",
+      "attempts": 1,
       "files": [
         "docs/GETTING-STARTED.md"
       ],
       "criteria": [
         "AC5"
       ],
-      "review": "batch"
+      "review": "batch",
+      "commit": "8f717f4"
     }
   ],
   "blocked": null,
@@ -77,7 +79,10 @@
       "intake": "2026-10-13T04:37:18Z",
       "spec": "2026-10-13T04:38:15Z",
       "plan": "2026-10-13T05:01:22Z",
-      "implement": "2026-10-13T05:01:50Z"
+      "implement": "2026-10-13T05:01:50Z",
+      "verify": "2026-10-13T05:04:43Z",
+      "document": "2026-10-13T05:05:07Z",
+      "deliver": "2026-10-13T05:05:07Z"
     },
     "gates": {
       "spec": {
@@ -87,6 +92,9 @@
       "plan": {
         "presented_at": "2026-10-13T05:01:22Z",
         "approved_at": "2026-10-13T05:01:50Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T05:05:07Z"
       }
     },
     "gate_rework": {
@@ -95,10 +103,11 @@
       "deliver": 0
     },
     "reviews": {
-      "total": 1,
-      "first_pass": 1
+      "total": 2,
+      "first_pass": 2
     },
     "retries": 0,
     "interventions": 0
-  }
+  },
+  "living": []
 }

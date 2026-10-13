@@ -38,3 +38,17 @@
 **Findings:** none CRITICAL/HIGH. LOW: restarting multipathd doesn't release maps already in use; if a Longhorn volume was already claimed, a node reboot clears it (noted in docs).
 
 **Next:** commit T1, T2
+
+## implementer · T2 · done
+2026-10-13T05:05:07Z
+
+**Did:** GETTING-STARTED "Check that Longhorn can use every node" (placed away from #49's edits; merge-tree clean).
+
+**Changed files:** `docs/GETTING-STARTED.md`
+
+## code-reviewer · batch (T2) · done
+2026-10-13T05:05:07Z
+
+**Findings:** none.
+
+**Next:** Deliver gate
