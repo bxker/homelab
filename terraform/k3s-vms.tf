@@ -62,6 +62,14 @@ resource "proxmox_virtual_environment_vm" "k3s_cp" {
     type         = "4m"
   }
 
+  # Guest agent: lets Proxmox freeze the filesystem for consistent snapshot backups.
+  # The Ubuntu image gets the package from Ansible (k3s.yml); the timeout keeps a
+  # rebuild from waiting on an agent that isn't installed yet.
+  agent {
+    enabled = true
+    timeout = "2m"
+  }
+
   operating_system { type = "l26" }
   on_boot = true
   machine = "q35"
@@ -119,6 +127,14 @@ resource "proxmox_virtual_environment_vm" "k3s_workers" {
     datastore_id = var.storage_pool
     file_format  = "raw"
     type         = "4m"
+  }
+
+  # Guest agent: lets Proxmox freeze the filesystem for consistent snapshot backups.
+  # The Ubuntu image gets the package from Ansible (k3s.yml); the timeout keeps a
+  # rebuild from waiting on an agent that isn't installed yet.
+  agent {
+    enabled = true
+    timeout = "2m"
   }
 
   operating_system { type = "l26" }

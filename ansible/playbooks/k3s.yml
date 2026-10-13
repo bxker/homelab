@@ -34,12 +34,26 @@
   become: true
 
   tasks:
-    - name: Install iSCSI and NFS clients
+    - name: Install iSCSI and NFS clients, and the Proxmox guest agent
       ansible.builtin.apt:
-        name: [open-iscsi, nfs-common]
+        name: [open-iscsi, nfs-common, qemu-guest-agent]
         state: present
         update_cache: true
         cache_valid_time: 3600
+
+    # The agent channel only exists after the VM is fully stopped and started
+    # once with agent=enabled (see docs/GETTING-STARTED.md "Backups"), so only
+    # start the service where the channel is present.
+    - name: Look for the virtio guest agent channel
+      ansible.builtin.stat:
+        path: /dev/virtio-ports/org.qemu.guest_agent.0
+      register: guest_agent_channel
+
+    - name: Start the guest agent
+      ansible.builtin.systemd:
+        name: qemu-guest-agent
+        state: started
+      when: guest_agent_channel.stat.exists
 
     - name: Load iscsi_tcp at boot
       ansible.builtin.copy:

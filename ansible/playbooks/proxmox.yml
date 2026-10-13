@@ -4,8 +4,20 @@
   become: true
   vars:
     use_no_subscription_repo: true
+    pbs_storage_id: pbs
+    pbs_job_id: homelab-nightly
+    pbs_env_vars: [PBS_SERVER, PBS_DATASTORE, PBS_USER, PBS_PASSWORD, PBS_FINGERPRINT]
 
   tasks:
+  # Fail before changing anything: dropping the local backup cron without a
+  # PBS replacement would silently end all backups.
+  - name: Check the PBS settings are in the environment
+    ansible.builtin.assert:
+      that: lookup('env', item) | length > 0
+      fail_msg: "{{ item }} is not set. Copy .env.example to .env and fill in the PBS_* values."
+      quiet: true
+    loop: "{{ pbs_env_vars }}"
+
   - name: Remove enterprise repo (no subscription)
     ansible.builtin.file:
       path: /etc/apt/sources.list.d/pve-enterprise.list
@@ -43,12 +55,84 @@
       line: "PasswordAuthentication no"
     notify: restart sshd
 
-  - name: Nightly VM backup
+  - name: Read configured storages
+    ansible.builtin.command: pvesh get /storage --output-format json
+    register: pve_storages
+    changed_when: false
+
+  # An existing `pbs` storage is left as it is (no drift correction).
+  - name: Add the Proxmox Backup Server storage
+    ansible.builtin.command:
+      argv:
+        - pvesm
+        - add
+        - pbs
+        - "{{ pbs_storage_id }}"
+        - --server
+        - "{{ lookup('env', 'PBS_SERVER') }}"
+        - --datastore
+        - "{{ lookup('env', 'PBS_DATASTORE') }}"
+        - --username
+        - "{{ lookup('env', 'PBS_USER') }}"
+        - --fingerprint
+        - "{{ lookup('env', 'PBS_FINGERPRINT') }}"
+        - --content
+        - backup
+    when: pbs_storage_id not in (pve_storages.stdout | from_json | map(attribute='storage') | list)
+    changed_when: true
+    no_log: true
+
+  # PVE reads the password from this file, which keeps it off command lines.
+  # Written after `pvesm add` (adding without --password removes the file), and
+  # only if missing, so a run interrupted in between is repaired by the next one.
+  - name: Check for the PBS password file
+    ansible.builtin.stat:
+      path: "/etc/pve/priv/storage/{{ pbs_storage_id }}.pw"
+    register: pbs_password_file
+
+  - name: Store the PBS password
+    ansible.builtin.command:
+      argv:
+        - sh
+        - -c
+        - 'umask 077 && cat > "$1"'
+        - sh
+        - "/etc/pve/priv/storage/{{ pbs_storage_id }}.pw"
+      stdin: "{{ lookup('env', 'PBS_PASSWORD') }}"
+    when: not pbs_password_file.stat.exists
+    changed_when: true
+    no_log: true
+
+  - name: Read backup jobs
+    ansible.builtin.command: pvesh get /cluster/backup --output-format json
+    register: pve_backup_jobs
+    changed_when: false
+
+  - name: Create the nightly backup job
+    ansible.builtin.command:
+      argv:
+        - pvesh
+        - create
+        - /cluster/backup
+        - --id
+        - "{{ pbs_job_id }}"
+        - --schedule
+        - "02:00"
+        - --storage
+        - "{{ pbs_storage_id }}"
+        - --all
+        - "1"
+        - --mode
+        - snapshot
+        - --prune-backups
+        - keep-daily=7,keep-weekly=4,keep-monthly=3
+    when: pbs_job_id not in (pve_backup_jobs.stdout | from_json | map(attribute='id') | list)
+    changed_when: true
+
+  - name: Remove the old local nightly VM backup cron job
     ansible.builtin.cron:
       name: "vzdump all VMs"
-      hour: "2"
-      minute: "0"
-      job: "vzdump --all --mode snapshot --storage local --compress zstd --quiet 1"
+      state: absent
 
   handlers:
   - name: restart sshd
