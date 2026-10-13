@@ -1,6 +1,6 @@
 # Spec: Source the Grafana admin password from OpenBao
 
-Ticket: gh:13 · Size: standard · Status: draft
+Ticket: gh:13 · Size: standard · Status: approved
 
 ## Problem
 Grafana's admin password is committed as `CHANGE_ME_BEFORE_DEPLOY` in a repo ArgoCD pulls
@@ -36,13 +36,7 @@ via ESO; Grafana should too, so no credential lives in Git.
 None.
 
 ## Open questions
-1. **Rotation procedure.** Recommended: owner writes `secret/grafana` *before* merging; after merge and
-   ESO sync, runs `kubectl -n monitoring exec deploy/<grafana> -c grafana -- grafana cli admin
-   reset-admin-password "$PW"` with the same value. Documented as a runbook, not automated. *Why: the
-   Secret alone doesn't change the DB password (Constraints).*
-2. **Sync ordering.** prometheus-stack is wave 4, ESO wave 5, so on a fresh cluster the ExternalSecret
-   CRD doesn't exist yet and the app's sync fails (child apps have no retry, #24). Recommended: move
-   prometheus-stack to wave 6. *Why: AC4; alternative is to wait for #24.*
-3. **Validation tooling.** `helm` isn't installed here. Recommended: allow downloading a pinned helm
-   binary into the scratchpad (not the repo) to render the chart for AC1/AC2 evidence. Without it,
-   evidence for AC1/AC2 is static review of templates/values only.
+None. Resolved at the Spec gate (all defaults):
+1. Owner writes `secret/grafana` before merge, then resets the DB password to match (runbook, not automated).
+2. Move prometheus-stack to sync wave 6.
+3. Pinned helm downloaded to the scratchpad (not the repo) for offline rendering.
