@@ -1,6 +1,6 @@
 # Spec: Repo hygiene: macOS cruft, stale docs, Tailscale location
 
-Ticket: gh:18 · Size: standard (moves a GitOps app path) · Status: draft
+Ticket: gh:18 · Size: standard (moves a GitOps app path) · Status: approved
 
 ## Problem
 Three `.DS_Store` files are committed. Several docs no longer match the repo: the Tailscale values tell
@@ -36,9 +36,4 @@ infrastructure component, lives under `workloads/`. The `CLAUDE.md` Secrets item
 None.
 
 ## Open questions
-1. **Move Tailscale to `infrastructure/`?** Recommended: yes. The Application name stays `tailscale`,
-   so ArgoCD updates the source path in place and nothing is recreated (AC3 proves the render is
-   identical). Alternative: leave it in `workloads/` and only fix the README.
-2. **`argocd-ingress.yaml`:** today it's only applied by hand from the README. Recommended: add one
-   `kubectl apply` to `mise run gitops` (an Ingress can be created before Traefik exists; cert-manager
-   issues its cert later). Alternative: leave it for #25 (ArgoCD self-management).
+None. Resolved at the Spec gate: (1) move Tailscale to `infrastructure/`; (2) `mise run gitops` applies `argocd-ingress.yaml`.

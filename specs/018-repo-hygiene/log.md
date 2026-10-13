@@ -11,3 +11,12 @@
 **Open issues:** OQ1 move Tailscale, OQ2 argocd-ingress in mise gitops
 
 **Next:** Spec gate
+
+## architect · plan · done
+2026-10-13T03:59:39Z
+
+**Did:** Wrote plan.md: 3 tasks; git mv for an exact rename; evidence via rename similarity + render or byte-diff.
+
+**Changed files:** `specs/018-repo-hygiene/plan.md`
+
+**Next:** Plan gate
