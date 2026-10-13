@@ -1,0 +1,27 @@
+# AdGuard Home web UI. AdGuard has no users configured, so the login comes
+# from the ingress-auth app's basic-auth Middleware in this namespace.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: adguard-home
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: homelab-ca
+    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-basic-auth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - adguard.homelab.local
+      secretName: adguard-home-tls
+  rules:
+    - host: adguard.homelab.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: adguard-home-http
+                port:
+                  number: 80

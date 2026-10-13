@@ -30,3 +30,7 @@ traefik:
     dashboard:
       enabled: true
       matchRule: Host(`traefik.homelab.local`)
+      # Internal entrypoint only (reach it with kubectl port-forward);
+      # login from the ingress-auth app as well.
+      middlewares:
+        - name: basic-auth

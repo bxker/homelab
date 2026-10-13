@@ -1,0 +1,32 @@
+{{- range .Values.namespaces }}
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: basic-auth
+  namespace: {{ . }}
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: openbao
+    kind: ClusterSecretStore
+  target:
+    name: basic-auth
+    creationPolicy: Owner
+  data:
+    # One htpasswd line, e.g. from `htpasswd -nbB admin <password>`
+    - secretKey: users
+      remoteRef:
+        key: ingress-auth
+        property: htpasswd
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: basic-auth
+  namespace: {{ . }}
+spec:
+  basicAuth:
+    secret: basic-auth
+    removeHeader: true
+{{- end }}
