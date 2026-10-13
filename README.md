@@ -19,13 +19,17 @@ Infrastructure-as-code managed homelab. Single mini PC today, multi-node tomorro
 │                     │                                       │
 │    Infrastructure   │   Workloads                           │
 │    ─────────────    │   ─────────                           │
-│    MetalLB          │   Prometheus + Grafana                │
-│    Traefik          │   Seafile                             │
-│    cert-manager     │   Tailscale                           │
+│    MetalLB          │   Seafile                             │
+│    Traefik          │                                       │
+│    cert-manager     │                                       │
 │    Longhorn         │                                       │
 │    AdGuard Home     │                                       │
 │    OpenBao          │                                       │
 │    Ext. Secrets     │                                       │
+│    Prometheus +     │                                       │
+│      Grafana        │                                       │
+│    Tailscale        │                                       │
+│    Ingress auth     │                                       │
 └─────────────────────────────────────────────────────────────┘
 
         ▲ All managed by ArgoCD (GitOps)
@@ -79,10 +83,11 @@ homelab/
 │       │   ├── prometheus-stack/
 │       │   ├── adguard-home/
 │       │   ├── openbao/
-│       │   └── external-secrets/
+│       │   ├── external-secrets/
+│       │   ├── tailscale/
+│       │   └── ingress-auth/  ← shared login for admin UIs
 │       └── workloads/
-│           ├── seafile/
-│           └── tailscale/
+│           └── seafile/
 │
 ├── .github/
 │   └── workflows/
@@ -99,27 +104,17 @@ homelab/
 > **Full walkthrough:** [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md)
 
 ```bash
-# Phase 1: Provision VMs on Proxmox
-cd terraform && cp terraform.tfvars.example terraform.tfvars
-# edit terraform.tfvars with your IPs, API token, and SSH public key
-tofu init && tofu apply
+# One-time setup: copy and fill in the gitignored config
+cp .env.example .env                                            # Proxmox URL, API token, node
+cp terraform/terraform.tfvars.example terraform/terraform.tfvars  # IPs, SSH key, storage
 
-# Phase 2: Install k3s
-cd ..
-mise run k3s-install
-# → installs k3s on CP and workers, writes ~/.kube/config
-
-# Phase 3: Deploy ArgoCD → it syncs everything else
-kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.13.3/manifests/install.yaml
-kubectl apply -n argocd -f kubernetes/bootstrap/argocd-install.yaml
-kubectl apply -f kubernetes/apps/app-of-apps.yaml
-# After Traefik syncs, apply the ArgoCD ingress:
-kubectl apply -f kubernetes/bootstrap/argocd-ingress.yaml
-
-# Phase 4: Configure Proxmox host
-cd ansible && ansible-playbook -i inventory.yml playbooks/proxmox.yml
+mise run infra          # Phase 1: provision VMs on Proxmox (asks before destroying anything)
+mise run k3s-install    # Phase 2: install k3s, write ~/.kube/config
+mise run gitops         # Phase 3: install ArgoCD, app-of-apps and the ArgoCD Ingress
+mise run configure      # Phase 4: configure the Proxmox host
 ```
+
+Then bootstrap OpenBao and store app secrets ([GETTING-STARTED.md](docs/GETTING-STARTED.md) Step 6).
 
 Or run everything at once:
 

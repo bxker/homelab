@@ -7,7 +7,7 @@
   - homelab-static: never handed out automatically. Services opt in with
     the annotation `metallb.io/loadBalancerIPs: <ip>`. Current pins (keep
     docs/GETTING-STARTED.md "IP Address Plan" in sync):
-      .200 Traefik · .201 AdGuard DNS · .203 AdGuard UI
+      .200 Traefik · .201 AdGuard DNS
   - homelab-pool: everything else gets the next free IP from here.
 */}}
 apiVersion: metallb.io/v1beta1
