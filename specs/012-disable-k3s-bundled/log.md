@@ -13,3 +13,12 @@
 **Open issues:** OQ1 automate vs runbook; OQ2 IngressClass gap
 
 **Next:** Spec gate
+
+## architect · plan · done
+2026-10-13T04:30:03Z
+
+**Did:** Wrote plan.md: task-file design (testable against the lab via a systemctl shim), 2 tasks.
+
+**Changed files:** `specs/012-disable-k3s-bundled/plan.md`
+
+**Next:** Plan gate

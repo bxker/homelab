@@ -1,6 +1,6 @@
 # Spec: Turn off k3s's bundled Traefik and ServiceLB without losing Traefik CRDs
 
-Ticket: gh:12 · Size: standard · Status: draft
+Ticket: gh:12 · Size: standard · Status: approved
 
 ## Problem
 k3s installs its own Traefik and ServiceLB next to the ArgoCD-managed Traefik and MetalLB: two ingress
@@ -44,10 +44,5 @@ ServiceLB finalizers. Result: k3s Traefik + ServiceLB gone; CRDs, IngressRoutes,
 None.
 
 ## Open questions
-1. **Automate the migration in the playbook, or a manual runbook?** Recommended: automate. It's the exact
-   lab-tested sequence, guarded so it only runs while bundled Traefik is still installed, and `mise run
-   k3s-install` is already how you manage k3s. Alternative: the playbook only handles fresh installs, and
-   `docs/` carries copy-paste commands for the one-time migration.
-2. **IngressClass gap:** Recommended: rely on ArgoCD selfHeal and have the playbook wait up to 5 min for it
-   (AC4). Alternative: also delete the k3s `traefik` release record, which keeps the IngressClass but leaves
-   k3s's Traefik Deployment, Service and RBAC to delete by hand.
+None. Resolved at the Spec gate: (1) automate the migration in the playbook; (2) rely on ArgoCD selfHeal for
+the `traefik` IngressClass, with a bounded wait and a warning (AC4).
