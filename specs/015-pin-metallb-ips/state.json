@@ -6,7 +6,7 @@
     "id": "15",
     "title": "[P0] Pin MetalLB IPs for Traefik and AdGuard DNS (race can break *.homelab.local)",
     "url": "https://github.com/bxker/homelab/issues/15",
-    "pr": null
+    "pr": "https://github.com/bxker/homelab/pull/45"
   },
   "slug": "015-pin-metallb-ips",
   "branch": "015-pin-metallb-ips",
@@ -14,11 +14,11 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "deliver",
+  "stage": "done",
   "gates": {
     "spec": "approved",
     "plan": "approved",
-    "deliver": "pending"
+    "deliver": "approved"
   },
   "domains": [
     "kubernetes",
@@ -99,7 +99,8 @@
       "implement": "2026-10-13T03:23:48Z",
       "verify": "2026-10-13T03:24:48Z",
       "document": "2026-10-13T03:25:11Z",
-      "deliver": "2026-10-13T03:25:11Z"
+      "deliver": "2026-10-13T03:25:11Z",
+      "done": "2026-10-13T03:25:55Z"
     },
     "gates": {
       "spec": {
@@ -111,7 +112,8 @@
         "approved_at": "2026-10-13T03:23:48Z"
       },
       "deliver": {
-        "presented_at": "2026-10-13T03:25:11Z"
+        "presented_at": "2026-10-13T03:25:11Z",
+        "approved_at": "2026-10-13T03:25:55Z"
       }
     },
     "gate_rework": {
