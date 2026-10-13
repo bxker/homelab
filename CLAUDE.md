@@ -39,7 +39,7 @@ helm template metallb . --namespace metallb-system
 
 1. **Terraform** (`terraform/k3s-vms.tf`) — downloads Ubuntu 24.04 cloud image via `proxmox_virtual_environment_download_file`, creates 3 VMs with static IPs and SSH key injected via cloud-init. Provider: `bpg/proxmox ~0.66`.
 
-2. **Ansible** (`ansible/playbooks/k3s.yml`) — installs k3s on control plane (`--cluster-init`), joins workers via node token, patches kubeconfig server address from `127.0.0.1` to the CP IP, writes to `~/.kube/config`.
+2. **Ansible** (`ansible/playbooks/k3s.yml`) — installs k3s on control plane (`--cluster-init`), joins workers via node token, patches kubeconfig server address from `127.0.0.1` to the CP IP, writes to `~/.kube/config`. Every node installs `k3s_version` from `ansible/inventory.yml` (Renovate proposes bumps). The playbook never upgrades a node: its first play stops if an installed node runs a different version, so upgrade the nodes before merging a bump. Workers read the join token from `/etc/rancher/k3s/config.yaml` (0600), never from a command line.
 
 3. **ArgoCD** bootstrapped manually once via `mise run gitops` — applies the upstream v2.13.3 install manifest, then `kubernetes/bootstrap/argocd-install.yaml` (ConfigMap setting `server.insecure: "true"`). After bootstrap, ArgoCD self-manages everything. `kubernetes/bootstrap/argocd-ingress.yaml` adds a Traefik Ingress at `argocd.homelab.local` once Traefik is synced.
 
