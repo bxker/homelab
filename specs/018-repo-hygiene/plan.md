@@ -1,6 +1,6 @@
 # Plan: Repo hygiene: macOS cruft, stale docs, Tailscale location
 
-Spec: [spec.md](spec.md) · Status: draft
+Spec: [spec.md](spec.md) · Status: approved
 
 ## Callouts
 - **New dependencies:** none

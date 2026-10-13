@@ -14,10 +14,10 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "plan",
+  "stage": "implement",
   "gates": {
     "spec": "approved",
-    "plan": "pending",
+    "plan": "approved",
     "deliver": "pending"
   },
   "domains": [
@@ -33,14 +33,67 @@
     "plan": null,
     "baseline_failures": []
   },
-  "tasks": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Remove .DS_Store",
+      "agent": "implementer",
+      "status": "in_progress",
+      "attempts": 1,
+      "files": [
+        ".gitignore",
+        ".DS_Store",
+        "kubernetes/.DS_Store",
+        "kubernetes/apps/.DS_Store"
+      ],
+      "criteria": [
+        "AC1"
+      ],
+      "review": "batch"
+    },
+    {
+      "id": "T2",
+      "title": "Move Tailscale to infrastructure",
+      "agent": "implementer",
+      "status": "todo",
+      "attempts": 0,
+      "files": [
+        "kubernetes/apps/workloads/tailscale/**",
+        "kubernetes/apps/infrastructure/tailscale/**"
+      ],
+      "criteria": [
+        "AC2",
+        "AC3"
+      ],
+      "review": "each"
+    },
+    {
+      "id": "T3",
+      "title": "README, pool comment, gitops task",
+      "agent": "implementer",
+      "status": "todo",
+      "attempts": 0,
+      "files": [
+        "README.md",
+        "kubernetes/apps/infrastructure/metallb/templates/pool.yaml",
+        "mise.toml"
+      ],
+      "criteria": [
+        "AC4",
+        "AC5",
+        "AC6"
+      ],
+      "review": "batch"
+    }
+  ],
   "blocked": null,
   "metrics": {
     "started_at": "2026-10-13T03:56:34Z",
     "stage_started_at": {
       "intake": "2026-10-13T03:56:34Z",
       "spec": "2026-10-13T03:58:00Z",
-      "plan": "2026-10-13T03:59:39Z"
+      "plan": "2026-10-13T03:59:39Z",
+      "implement": "2026-10-13T04:00:09Z"
     },
     "gates": {
       "spec": {
@@ -48,7 +101,8 @@
         "approved_at": "2026-10-13T03:59:39Z"
       },
       "plan": {
-        "presented_at": "2026-10-13T03:59:39Z"
+        "presented_at": "2026-10-13T03:59:39Z",
+        "approved_at": "2026-10-13T04:00:09Z"
       }
     },
     "gate_rework": {
