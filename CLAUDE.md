@@ -13,15 +13,16 @@ IPs configured in `mise.toml` env vars and `terraform.tfvars` (both gitignored o
 All tasks run through `mise`:
 
 ```bash
-mise run all            # full deploy: cluster (destroy+provision+k3s) → gitops → configure
-mise run infra          # terraform apply (provision VMs)
+mise run all            # full deploy, non-destructive: cluster (provision+k3s) → gitops → configure
+mise run infra          # tofu apply; asks first if the plan destroys/replaces anything
+mise run rebuild        # DESTROY all VMs + data, then cluster (asks for cluster name)
 mise run k3s-install    # ansible: install k3s, write ~/.kube/config
 mise run gitops         # install ArgoCD + apply app-of-apps
 mise run configure      # ansible: harden Proxmox host
 mise run sync           # apply app-of-apps to existing cluster (not a full gitops reinstall)
 mise run status         # kubectl get nodes + ArgoCD apps + LB services
 mise run deps           # helm dependency build for all wrapper charts
-mise run destroy        # terraform destroy
+mise run destroy        # tofu destroy (tofu asks for confirmation)
 ```
 
 Manual Helm operations (local preview only — ArgoCD deploys for real):

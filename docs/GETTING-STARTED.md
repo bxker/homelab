@@ -90,6 +90,10 @@ cp terraform.tfvars.example terraform.tfvars
 mise run all
 ```
 
+`mise run all` is non-destructive and safe to re-run. If a Terraform plan would destroy or
+replace a VM, `infra` shows the plan and asks before applying. `mise run rebuild` destroys
+everything first (after you type the cluster name).
+
 This runs four phases in order:
 
 1. **infra** — Terraform downloads Ubuntu 24.04 cloud image, creates 3 VMs with cloud-init networking and your SSH key

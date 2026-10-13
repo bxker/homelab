@@ -127,6 +127,10 @@ Or run everything at once:
 mise run all
 ```
 
+`mise run all` is safe to re-run: it never destroys VMs, and `infra` stops to ask if a plan
+would destroy or replace one. To wipe everything and start over (all VM and Longhorn data is
+lost), run `mise run rebuild` and type the cluster name when asked.
+
 ## Wrapper Chart Pattern
 
 Every app in `kubernetes/apps/` is a **wrapper Helm chart** that pulls in an upstream

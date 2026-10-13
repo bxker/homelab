@@ -15,3 +15,6 @@ terraform/.terraform.lock.hcl
 # Helm dependency artifacts (ArgoCD runs `helm dependency build` itself)
 kubernetes/apps/**/charts/
 kubernetes/apps/**/Chart.lock
+
+# Saved plans (mise run infra) can contain secrets
+terraform/tfplan

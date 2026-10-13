@@ -22,20 +22,37 @@ pipx = "latest"
 # ══════════════════════════════════════
 
 [tasks.infra]
-description = "Provision VMs on Proxmox"
-run = """
+description = "Provision VMs on Proxmox (asks first if the plan destroys or replaces anything)"
+interactive = true
+run = '''
 cd terraform
-tofu init
-tofu apply -auto-approve
-"""
+tofu init -input=false
+trap 'rm -f tfplan' EXIT
+tofu plan -input=false -out=tfplan
+plan_json=$(tofu show -json tfplan)
+# "delete" appears in the actions of both destroys and replacements.
+if printf '%s' "$plan_json" | grep -Eq '"actions":\[[^]]*"delete"'; then
+  echo ""
+  echo "WARNING: this plan DESTROYS or REPLACES resources (see above)."
+  echo "Replacing a k3s VM deletes its disk, including Longhorn data on it."
+  printf "Type 'yes' to apply anyway: "
+  read -r answer
+  if [ "$answer" != "yes" ]; then
+    echo "Aborted. Nothing was applied."
+    exit 1
+  fi
+fi
+tofu apply -input=false tfplan
+'''
 
 [tasks.infra-plan]
 description = "Preview infrastructure changes"
 run = "cd terraform && tofu init && tofu plan"
 
 [tasks.infra-destroy]
-description = "Tear down all VMs"
-run = "cd terraform && tofu destroy -auto-approve"
+description = "DESTROY all VMs and their data (tofu asks for confirmation)"
+interactive = true
+run = "cd terraform && tofu init -input=false && tofu destroy"
 
 # ══════════════════════════════════════
 # Phase 2: k3s Cluster
@@ -62,13 +79,28 @@ echo ""
 echo "k3s cluster ready. Try: kubectl get nodes"
 """
 
+# Ordered `run` steps rather than `depends`: mise runs depends in parallel.
 [tasks.cluster]
-description = "Full cluster setup (provision VMs + install k3s)"
-run = """
-mise run infra-destroy 2>/dev/null || true
-mise run infra
-mise run k3s-install
-"""
+description = "Provision VMs and install k3s (non-destructive; safe to re-run)"
+run = [{ task = "infra" }, { task = "k3s-install" }]
+
+[tasks.rebuild]
+description = "DESTROY all VMs and their data, then provision VMs and install k3s from scratch"
+interactive = true
+run = [
+  '''
+  echo "This destroys every VM in Terraform state, with all Longhorn data on them"
+  echo "(Seafile, MariaDB, OpenBao secrets, Grafana). There are no off-host backups."
+  printf "Type the cluster name (%s) to continue: " "$CLUSTER_NAME"
+  read -r answer
+  if [ "$answer" != "$CLUSTER_NAME" ]; then
+    echo "Aborted. Nothing was destroyed."
+    exit 1
+  fi
+  ''',
+  { task = "infra-destroy" },
+  { task = "cluster" },
+]
 
 # ══════════════════════════════════════
 # Phase 3: GitOps
@@ -122,9 +154,12 @@ run = "cd ansible && ansible-playbook -i inventory.yml playbooks/proxmox.yml"
 # ══════════════════════════════════════
 
 [tasks.all]
-description = "Run everything in order"
-depends = ["cluster", "gitops", "configure"]
-run = """
+description = "Deploy everything in order (non-destructive; use `rebuild` to start from scratch)"
+run = [
+  { task = "cluster" },
+  { task = "gitops" },
+  { task = "configure" },
+  """
 echo ""
 echo "========================================="
 echo "  Homelab is up!"
@@ -132,19 +167,22 @@ echo "  Run: mise run argocd-password"
 echo "  Run: mise run argocd-ui"
 echo "  Then open https://localhost:8080"
 echo "========================================="
-"""
+""",
+]
 
 [tasks.sync]
 description = "Push app-of-apps to ArgoCD (use on existing cluster instead of gitops)"
 run = "kubectl apply -f kubernetes/apps/app-of-apps.yaml"
 
 [tasks.destroy]
-description = "Tear it all down"
-depends = ["infra-destroy"]
-run = """
+description = "DESTROY all VMs and their data (tofu asks for confirmation)"
+run = [
+  { task = "infra-destroy" },
+  """
 echo "All VMs destroyed. Your Git repo still has everything to rebuild."
 echo "Run: mise run all"
-"""
+""",
+]
 
 [tasks.status]
 description = "Show cluster and app status"
