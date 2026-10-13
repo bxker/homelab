@@ -1,6 +1,6 @@
 # Spec: Require a login for the Longhorn and AdGuard admin UIs
 
-Ticket: gh:14 · Size: standard · Status: draft
+Ticket: gh:14 · Size: standard · Status: approved
 
 ## Problem
 Longhorn's UI (`longhorn.homelab.local`, can delete volumes) and AdGuard's UI (`192.168.1.203`, controls
@@ -9,7 +9,7 @@ Traefik dashboard is **not** LAN-exposed: its IngressRoute uses the `traefik` en
 the LoadBalancer Service doesn't publish (only 80/443, checked in the rendered chart).
 
 ## Goals
-- Longhorn and AdGuard UIs require credentials; nothing about the credentials is in Git.
+- Longhorn, AdGuard and Traefik dashboard UIs require credentials; nothing about the credentials is in Git.
 - A fresh bootstrap never serves those UIs without auth, even briefly.
 
 ## Non-goals
@@ -38,13 +38,8 @@ the LoadBalancer Service doesn't publish (only 80/443, checked in the rendered c
 None.
 
 ## Open questions
-1. **AdGuard:** *its UI is on its own LoadBalancer (.203), not behind Traefik.* Recommended: serve it at
-   `adguard.homelab.local` through Traefik with the same basic-auth, and turn `adguard-home-http` into a
-   ClusterIP (frees .203). Alternative: AdGuard's own `users:` login, which needs the DNS pod to read a
-   Secret at start-up. A missing Secret would then stop LAN DNS.
-2. **Credential format:** Recommended: an `htpasswd -nbB` bcrypt line in OpenBao `secret/ingress-auth`
-   (the cluster only ever holds the hash). Alternative: plain username/password (`kubernetes.io/basic-auth`),
-   which is simpler, but Traefik hashes it with unsalted SHA-1 and the plaintext sits in the Secret.
-3. **Traefik dashboard:** Recommended: leave it internal-only and document `kubectl port-forward`.
-   Alternatives: add the same auth anyway, or disable it.
-4. **One login or one per UI?** Recommended: one shared login until SSO (#30).
+None. Resolved at the Spec gate:
+1. AdGuard UI served at `adguard.homelab.local` through Traefik with basic auth; `adguard-home-http` → ClusterIP, .203 freed.
+2. Credential: bcrypt `htpasswd -nbB` line in OpenBao `secret/ingress-auth` (property `htpasswd`).
+3. Traefik dashboard: add the same auth (defense in depth), still internal-only.
+4. One shared login for all three.

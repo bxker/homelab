@@ -1,27 +1,68 @@
 {
   "version": 1,
-  "ticket": { "source": "github", "ref": "gh:14", "id": "14", "title": "[P0] Put authentication in front of Longhorn UI, Traefik dashboard and AdGuard", "url": "https://github.com/bxker/homelab/issues/14", "pr": null },
+  "ticket": {
+    "source": "github",
+    "ref": "gh:14",
+    "id": "14",
+    "title": "[P0] Put authentication in front of Longhorn UI, Traefik dashboard and AdGuard",
+    "url": "https://github.com/bxker/homelab/issues/14",
+    "pr": null
+  },
   "slug": "014-admin-ui-auth",
   "branch": "014-admin-ui-auth",
   "base": "main",
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "spec",
-  "gates": { "spec": "pending", "plan": "pending", "deliver": "pending" },
-  "domains": ["kubernetes", "gitops"],
+  "stage": "plan",
+  "gates": {
+    "spec": "approved",
+    "plan": "pending",
+    "deliver": "pending"
+  },
+  "domains": [
+    "kubernetes",
+    "gitops"
+  ],
   "targets": {},
-  "commands": { "test": null, "lint": null, "build": null,
-                "validate": ["scratchpad render2.sh (helm v3.16.4; longhorn, adguard-home, new app)", "offline assertions script"],
-                "plan": null, "baseline_failures": [] },
+  "commands": {
+    "test": null,
+    "lint": null,
+    "build": null,
+    "validate": [
+      "scratchpad render2.sh (helm v3.16.4; longhorn, adguard-home, new app)",
+      "offline assertions script"
+    ],
+    "plan": null,
+    "baseline_failures": []
+  },
   "tasks": [],
   "blocked": null,
   "metrics": {
     "started_at": "2026-10-13T03:34:16Z",
-    "stage_started_at": { "intake": "2026-10-13T03:34:16Z", "spec": "2026-10-13T03:36:00Z" },
-    "gates": { "spec": { "presented_at": "2026-10-13T03:35:18Z" } },
-    "gate_rework": { "spec": 0, "plan": 0, "deliver": 0 },
-    "reviews": { "total": 0, "first_pass": 0 },
+    "stage_started_at": {
+      "intake": "2026-10-13T03:34:16Z",
+      "spec": "2026-10-13T03:36:00Z",
+      "plan": "2026-10-13T03:36:49Z"
+    },
+    "gates": {
+      "spec": {
+        "presented_at": "2026-10-13T03:35:18Z",
+        "approved_at": "2026-10-13T03:36:49Z"
+      },
+      "plan": {
+        "presented_at": "2026-10-13T03:37:15Z"
+      }
+    },
+    "gate_rework": {
+      "spec": 0,
+      "plan": 0,
+      "deliver": 0
+    },
+    "reviews": {
+      "total": 0,
+      "first_pass": 0
+    },
     "retries": 0,
     "interventions": 0
   }
