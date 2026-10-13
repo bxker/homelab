@@ -116,6 +116,7 @@ kubectl get svc -n traefik
 #   192.168.1.200  grafana.homelab.local
 #   192.168.1.200  files.homelab.local
 #   192.168.1.200  longhorn.homelab.local
+#   192.168.1.200  adguard.homelab.local
 ```
 
 ## Step 6: Bootstrap OpenBao (Secrets Manager)
@@ -146,7 +147,26 @@ bao kv put secret/tailscale client_id=YOUR_ID client_secret=YOUR_SECRET
 
 # Grafana admin login (Grafana waits for this secret before it starts)
 bao kv put secret/grafana admin_user=admin admin_password="$(openssl rand -base64 24)"
+
+# Shared login for admin UIs without their own (Longhorn, AdGuard, Traefik dashboard).
+# Store only the bcrypt hash; keep the password in your password manager.
+# htpasswd is in apache2-utils / httpd-tools, or: docker run --rm httpd:2.4-alpine htpasswd -nbB ...
+bao kv put secret/ingress-auth htpasswd="$(htpasswd -nbB admin 'YOUR_PASSWORD')"
 ```
+
+### Admin UIs behind the shared login
+
+Until `secret/ingress-auth` exists these routes are refused (404), never served without a login.
+
+| UI | URL |
+|---|---|
+| Longhorn | https://longhorn.homelab.local |
+| AdGuard Home | https://adguard.homelab.local |
+| Traefik dashboard | internal only: `kubectl -n traefik port-forward deploy/traefik 9000:9000`, add `127.0.0.1 traefik.homelab.local` to `/etc/hosts`, open http://traefik.homelab.local:9000/dashboard/ |
+
+To protect another UI, add its namespace to `kubernetes/apps/infrastructure/ingress-auth/values.yaml`
+and annotate its Ingress with
+`traefik.ingress.kubernetes.io/router.middlewares: <namespace>-basic-auth@kubernetescrd`.
 
 ### Rotate the Grafana admin password
 
@@ -197,7 +217,6 @@ is still attached to the old pod on another node. Delete the old pod to let it m
 | .200–.209       | MetalLB `homelab-static`: pinned only, never auto-assigned |
 | 192.168.1.200   | Traefik (all `*.homelab.local` Ingresses) |
 | 192.168.1.201   | AdGuard Home DNS: set as the router's DHCP DNS server |
-| 192.168.1.203   | AdGuard Home web UI      |
 | .210–.250       | MetalLB `homelab-pool`: any other LoadBalancer |
 
 To pin another Service, pick a free IP in .200–.209, add the annotation

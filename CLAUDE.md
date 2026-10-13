@@ -71,7 +71,7 @@ ArgoCD runs `helm dependency build` automatically. Never commit the `charts/` di
 
 ### Sync Waves
 
-All apps use `argocd.argoproj.io/sync-wave` annotations in `application.yaml` to control ordering. Approximate wave assignments: MetalLB (1) → Traefik / cert-manager / AdGuard Home (2) → Longhorn (3) → OpenBao (4) → External Secrets Operator (5) → Prometheus Stack / Tailscale (6) → Seafile (10).
+All apps use `argocd.argoproj.io/sync-wave` annotations in `application.yaml` to control ordering. Approximate wave assignments: MetalLB (1) → Traefik / cert-manager / AdGuard Home (2) → Longhorn (3) → OpenBao (4) → External Secrets Operator (5) → Prometheus Stack / Tailscale / Ingress auth (6) → Seafile (10).
 
 ### Adding a New App
 
@@ -95,7 +95,8 @@ Update `repoURL` in `app-of-apps.yaml` and all `application.yaml` files to your 
 Secrets are kept out of Git:
 - **`.env`** (gitignored) — Proxmox URL, API token, node name. Loaded by mise via `_.file = ".env"`. See `.env.example` for the template.
 - **`terraform.tfvars`** (gitignored) — SSH public key, IPs, storage pool.
-- **Kubernetes** — app secrets live in OpenBao (`secret/<app>`) and reach the cluster through an `ExternalSecret` in the app's `templates/` (ClusterSecretStore `openbao`). Current keys: `secret/tailscale`, `secret/seafile`, `secret/grafana`. Never put credentials in `values.yaml`. Grafana's admin password rotation needs an extra step (see `docs/GETTING-STARTED.md`).
+- **Kubernetes** — app secrets live in OpenBao (`secret/<app>`) and reach the cluster through an `ExternalSecret` in the app's `templates/` (ClusterSecretStore `openbao`). Current keys: `secret/tailscale`, `secret/seafile`, `secret/grafana`, `secret/ingress-auth` (bcrypt htpasswd line for the shared admin-UI login). Never put credentials in `values.yaml`. Grafana's admin password rotation needs an extra step (see `docs/GETTING-STARTED.md`).
+- **Admin UIs without their own login** (Longhorn, AdGuard, Traefik dashboard) use the `basic-auth` Traefik Middleware from `kubernetes/apps/infrastructure/ingress-auth/`: add the namespace to its `values.yaml` and annotate the Ingress with `traefik.ingress.kubernetes.io/router.middlewares: <namespace>-basic-auth@kubernetescrd`.
 
 ### Ansible Inventory
 
