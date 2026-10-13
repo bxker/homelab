@@ -56,3 +56,19 @@
 - LOW: existing agents keep `K3S_URL`/`K3S_TOKEN` in `/etc/systemd/system/k3s-agent.service.env` from the old install; the new config.yaml duplicates them (no restart). Cleaning that file needs a restart, so it's left out of scope.
 
 **Next:** commit T1, T2
+
+## implementer · T2 · done
+2026-10-13T03:54:16Z
+
+**Did:** Renovate regex custom manager for `k3s_version` (github-releases k3s-io/k3s, +k3sN versioning) and a `k3s-upgrade` packageRule; CLAUDE.md provisioning note. Rewrote the JSON edit by hand to keep the file's compact style.
+
+**Evidence:** `check_k3s.py` → RESULT: PASS (14/14)
+
+**Changed files:** `renovate.json`, `CLAUDE.md`
+
+**Next:** verify
+
+## engine · scope note
+2026-10-13T03:54:16Z
+
+Out-of-scope fix on this branch (commit efeb270): restored `specs/014-admin-ui-auth/plan.md` and `specs/015-pin-metallb-ips/plan.md`, which the engine's own approval step had truncated before they merged. Listed at the Deliver gate.
