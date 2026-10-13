@@ -6,7 +6,7 @@
     "id": "16",
     "title": "[P0] Pin k3s version and stop passing the join token on the command line",
     "url": "https://github.com/bxker/homelab/issues/16",
-    "pr": null
+    "pr": "https://github.com/bxker/homelab/pull/47"
   },
   "slug": "016-pin-k3s-version",
   "branch": "016-pin-k3s-version",
@@ -14,11 +14,11 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "deliver",
+  "stage": "done",
   "gates": {
     "spec": "approved",
     "plan": "approved",
-    "deliver": "pending"
+    "deliver": "approved"
   },
   "domains": [
     "scripting"
@@ -85,7 +85,8 @@
       "implement": "2026-10-13T03:50:33Z",
       "verify": "2026-10-13T03:53:41Z",
       "document": "2026-10-13T03:54:16Z",
-      "deliver": "2026-10-13T03:54:16Z"
+      "deliver": "2026-10-13T03:54:16Z",
+      "done": "2026-10-13T03:56:32Z"
     },
     "gates": {
       "spec": {
@@ -97,7 +98,8 @@
         "approved_at": "2026-10-13T03:50:33Z"
       },
       "deliver": {
-        "presented_at": "2026-10-13T03:54:16Z"
+        "presented_at": "2026-10-13T03:54:16Z",
+        "approved_at": "2026-10-13T03:56:32Z"
       }
     },
     "gate_rework": {
