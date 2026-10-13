@@ -27,3 +27,29 @@
 **Open issues:** none
 
 **Next:** Plan gate
+
+## implementer · T1 · done
+2026-10-13T03:38:23Z
+
+**Did:** New app `ingress-auth` (wave 6): per namespace (longhorn-system, adguard, traefik) an ExternalSecret `basic-auth` (key `users` ← `secret/ingress-auth`.`htpasswd`) and a `traefik.io/v1alpha1` basicAuth Middleware (`removeHeader: true`).
+
+**Evidence:**
+- `check_auth.py` red on baseline (AC3/AC4 FAIL); after T1 → all AC3/AC4 PASS; `helm lint` 0 failed; 6 resources rendered
+
+**Changed files:** `kubernetes/apps/infrastructure/ingress-auth/{Chart.yaml,values.yaml,application.yaml,templates/basic-auth.yaml}`
+
+**Open issues:** none
+
+**Next:** review T1
+
+## infra-reviewer + security-reviewer · T1 · done
+2026-10-13T03:38:23Z
+
+**Did:** Reviewed the new app and Traefik's rendered RBAC/provider args (offline).
+
+**Findings:**
+- none CRITICAL/HIGH. Traefik ClusterRole has get/list/watch on secrets and middlewares; providers unscoped.
+- LOW: app has no CreateNamespace. It relies on the three namespaces existing (waves 2–3); on a fresh bootstrap they do by wave 6.
+- LOW (pre-existing, #32): ClusterSecretStore isn't namespace-scoped.
+
+**Next:** commit T1, T2

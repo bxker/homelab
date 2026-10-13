@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-auth
+  namespace: argocd
+  annotations:
+    # After External Secrets (5) and Traefik's CRDs (2)
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/bxker/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/infrastructure/ingress-auth
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }

@@ -14,10 +14,10 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "plan",
+  "stage": "implement",
   "gates": {
     "spec": "approved",
-    "plan": "pending",
+    "plan": "approved",
     "deliver": "pending"
   },
   "domains": [
@@ -36,14 +36,81 @@
     "plan": null,
     "baseline_failures": []
   },
-  "tasks": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "ingress-auth app",
+      "agent": "implementer",
+      "status": "in_progress",
+      "attempts": 1,
+      "files": [
+        "kubernetes/apps/infrastructure/ingress-auth/Chart.yaml",
+        "kubernetes/apps/infrastructure/ingress-auth/values.yaml",
+        "kubernetes/apps/infrastructure/ingress-auth/application.yaml",
+        "kubernetes/apps/infrastructure/ingress-auth/templates/basic-auth.yaml"
+      ],
+      "criteria": [
+        "AC3",
+        "AC4"
+      ],
+      "review": "each",
+      "red": "assertion"
+    },
+    {
+      "id": "T2",
+      "title": "Auth on Longhorn Ingress and dashboard",
+      "agent": "implementer",
+      "status": "todo",
+      "attempts": 0,
+      "files": [
+        "kubernetes/apps/infrastructure/longhorn/values.yaml",
+        "kubernetes/apps/infrastructure/traefik/values.yaml"
+      ],
+      "criteria": [
+        "AC1"
+      ],
+      "review": "each"
+    },
+    {
+      "id": "T3",
+      "title": "AdGuard UI behind Traefik",
+      "agent": "implementer",
+      "status": "todo",
+      "attempts": 0,
+      "files": [
+        "kubernetes/apps/infrastructure/adguard-home/templates/service.yaml",
+        "kubernetes/apps/infrastructure/adguard-home/templates/ingress.yaml"
+      ],
+      "criteria": [
+        "AC2"
+      ],
+      "review": "each"
+    },
+    {
+      "id": "T4",
+      "title": "Docs, IP plan, vault-write hint",
+      "agent": "implementer",
+      "status": "todo",
+      "attempts": 0,
+      "files": [
+        "docs/GETTING-STARTED.md",
+        "CLAUDE.md",
+        "mise.toml"
+      ],
+      "criteria": [
+        "AC5"
+      ],
+      "review": "batch"
+    }
+  ],
   "blocked": null,
   "metrics": {
     "started_at": "2026-10-13T03:34:16Z",
     "stage_started_at": {
       "intake": "2026-10-13T03:34:16Z",
       "spec": "2026-10-13T03:36:00Z",
-      "plan": "2026-10-13T03:36:49Z"
+      "plan": "2026-10-13T03:36:49Z",
+      "implement": "2026-10-13T03:37:52Z"
     },
     "gates": {
       "spec": {
@@ -51,7 +118,8 @@
         "approved_at": "2026-10-13T03:36:49Z"
       },
       "plan": {
-        "presented_at": "2026-10-13T03:37:15Z"
+        "presented_at": "2026-10-13T03:37:15Z",
+        "approved_at": "2026-10-13T03:37:52Z"
       }
     },
     "gate_rework": {

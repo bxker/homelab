@@ -1,0 +1,11 @@
+# No upstream chart. Every namespace listed here gets a Secret `basic-auth`
+# (from OpenBao secret/ingress-auth, property `htpasswd`) and a Traefik
+# Middleware `basic-auth`. Routes in that namespace attach it with:
+#   Ingress:      traefik.ingress.kubernetes.io/router.middlewares: <namespace>-basic-auth@kubernetescrd
+#   IngressRoute: middlewares: [{ name: basic-auth }]
+# A route whose Middleware doesn't exist yet is refused, so UIs stay closed
+# until this app has synced.
+namespaces:
+  - longhorn-system   # Longhorn UI
+  - adguard           # AdGuard Home UI
+  - traefik           # Traefik dashboard

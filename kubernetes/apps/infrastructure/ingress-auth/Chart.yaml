@@ -1,0 +1,4 @@
+apiVersion: v2
+name: ingress-auth
+version: 1.0.0
+description: Shared basic-auth login (Traefik Middleware) for admin UIs without their own login
