@@ -6,7 +6,7 @@
     "id": "17",
     "title": "[P0] Longhorn prerequisites missing on control-plane node (and multipathd conflict)",
     "url": "https://github.com/bxker/homelab/issues/17",
-    "pr": null
+    "pr": "https://github.com/bxker/homelab/pull/50"
   },
   "slug": "017-longhorn-prereqs",
   "branch": "017-longhorn-prereqs",
@@ -14,11 +14,11 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "deliver",
+  "stage": "done",
   "gates": {
     "spec": "approved",
     "plan": "approved",
-    "deliver": "pending"
+    "deliver": "approved"
   },
   "domains": [
     "scripting"
@@ -82,7 +82,8 @@
       "implement": "2026-10-13T05:01:50Z",
       "verify": "2026-10-13T05:04:43Z",
       "document": "2026-10-13T05:05:07Z",
-      "deliver": "2026-10-13T05:05:07Z"
+      "deliver": "2026-10-13T05:05:07Z",
+      "done": "2026-10-13T05:07:02Z"
     },
     "gates": {
       "spec": {
@@ -94,7 +95,8 @@
         "approved_at": "2026-10-13T05:01:50Z"
       },
       "deliver": {
-        "presented_at": "2026-10-13T05:05:07Z"
+        "presented_at": "2026-10-13T05:05:07Z",
+        "approved_at": "2026-10-13T05:07:02Z"
       }
     },
     "gate_rework": {
