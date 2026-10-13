@@ -81,3 +81,12 @@
 **Open issues:** none
 
 **Next:** commit T2, T3
+
+## code-reviewer · batch (T3) · done
+2026-10-13T03:25:11Z
+
+**Did:** Read T3 docs diff against AC4.
+
+**Findings:** none.
+
+**Next:** Deliver gate

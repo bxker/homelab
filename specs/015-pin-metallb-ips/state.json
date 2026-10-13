@@ -14,7 +14,7 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "implement",
+  "stage": "deliver",
   "gates": {
     "spec": "approved",
     "plan": "approved",
@@ -41,7 +41,7 @@
       "id": "T1",
       "title": "Split MetalLB pool",
       "agent": "implementer",
-      "status": "in_progress",
+      "status": "done",
       "attempts": 1,
       "files": [
         "kubernetes/apps/infrastructure/metallb/templates/pool.yaml"
@@ -49,14 +49,16 @@
       "criteria": [
         "AC5"
       ],
-      "review": "each"
+      "review": "each",
+      "commit": "34cfa9b",
+      "red": "assertion"
     },
     {
       "id": "T2",
       "title": "Pin Traefik and AdGuard Services",
       "agent": "implementer",
-      "status": "todo",
-      "attempts": 0,
+      "status": "done",
+      "attempts": 1,
       "files": [
         "kubernetes/apps/infrastructure/traefik/values.yaml",
         "kubernetes/apps/infrastructure/adguard-home/templates/service.yaml",
@@ -67,21 +69,24 @@
         "AC2",
         "AC3"
       ],
-      "review": "each"
+      "review": "each",
+      "commit": "1d87c3e",
+      "red": "assertion"
     },
     {
       "id": "T3",
       "title": "IP plan in docs",
       "agent": "implementer",
-      "status": "todo",
-      "attempts": 0,
+      "status": "done",
+      "attempts": 1,
       "files": [
         "docs/GETTING-STARTED.md"
       ],
       "criteria": [
         "AC4"
       ],
-      "review": "batch"
+      "review": "batch",
+      "commit": "8be5882"
     }
   ],
   "blocked": null,
@@ -91,7 +96,10 @@
       "intake": "2026-10-13T03:19:12Z",
       "spec": "2026-10-13T03:20:00Z",
       "plan": "2026-10-13T03:21:15Z",
-      "implement": "2026-10-13T03:23:48Z"
+      "implement": "2026-10-13T03:23:48Z",
+      "verify": "2026-10-13T03:24:48Z",
+      "document": "2026-10-13T03:25:11Z",
+      "deliver": "2026-10-13T03:25:11Z"
     },
     "gates": {
       "spec": {
@@ -101,6 +109,9 @@
       "plan": {
         "presented_at": "2026-10-13T03:22:04Z",
         "approved_at": "2026-10-13T03:23:48Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T03:25:11Z"
       }
     },
     "gate_rework": {
@@ -109,10 +120,11 @@
       "deliver": 0
     },
     "reviews": {
-      "total": 0,
-      "first_pass": 0
+      "total": 3,
+      "first_pass": 3
     },
     "retries": 0,
     "interventions": 0
-  }
+  },
+  "living": []
 }
