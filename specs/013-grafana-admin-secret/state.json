@@ -6,7 +6,7 @@
     "id": "13",
     "title": "[P0] Rotate Grafana admin password and source it from OpenBao via ESO",
     "url": "https://github.com/bxker/homelab/issues/13",
-    "pr": null
+    "pr": "https://github.com/bxker/homelab/pull/44"
   },
   "slug": "013-grafana-admin-secret",
   "branch": "013-grafana-admin-secret",
@@ -14,11 +14,11 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "deliver",
+  "stage": "done",
   "gates": {
     "spec": "approved",
     "plan": "approved",
-    "deliver": "pending"
+    "deliver": "approved"
   },
   "domains": [
     "kubernetes",
@@ -86,7 +86,8 @@
       "implement": "2026-10-13T02:25:00Z",
       "verify": "2026-10-13T02:29:42Z",
       "document": "2026-10-13T02:30:00Z",
-      "deliver": "2026-10-13T02:31:00Z"
+      "deliver": "2026-10-13T02:31:00Z",
+      "done": "2026-10-13T03:18:55Z"
     },
     "gates": {
       "spec": {
@@ -98,7 +99,8 @@
         "approved_at": "2026-10-13T02:25:00Z"
       },
       "deliver": {
-        "presented_at": "2026-10-13T02:31:00Z"
+        "presented_at": "2026-10-13T02:31:00Z",
+        "approved_at": "2026-10-13T03:18:55Z"
       }
     },
     "gate_rework": {
@@ -111,7 +113,7 @@
       "first_pass": 3
     },
     "retries": 0,
-    "interventions": 0
+    "interventions": 1
   },
   "living": []
 }
