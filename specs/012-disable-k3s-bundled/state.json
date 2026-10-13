@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "ticket": { "source": "github", "ref": "gh:12", "id": "12", "title": "[P0] Disable k3s bundled Traefik and ServiceLB (conflict with ArgoCD Traefik + MetalLB)", "url": "https://github.com/bxker/homelab/issues/12", "pr": null },
+  "slug": "012-disable-k3s-bundled",
+  "branch": "012-disable-k3s-bundled",
+  "base": "main",
+  "size": "standard",
+  "mode": "fallback",
+  "delivery": "normal",
+  "stage": "spec",
+  "gates": { "spec": "pending", "plan": "pending", "deliver": "pending" },
+  "domains": ["scripting", "kubernetes"],
+  "targets": { "lab": "local throwaway k3s v1.36.5 in the sandbox (not the owner's cluster)" },
+  "commands": { "test": null, "lint": "uvx ansible-lint ansible/playbooks/k3s.yml", "build": null,
+                "validate": ["uvx --from ansible-core ansible-playbook --syntax-check -i ansible/inventory.yml ansible/playbooks/k3s.yml"], "plan": null, "baseline_failures": [] },
+  "tasks": [],
+  "blocked": null,
+  "metrics": {
+    "started_at": "2026-10-13T04:05:00Z",
+    "stage_started_at": { "intake": "2026-10-13T04:05:00Z", "spec": "2026-10-13T04:24:36Z" },
+    "gates": { "spec": { "presented_at": "2026-10-13T04:24:36Z" } },
+    "gate_rework": { "spec": 0, "plan": 0, "deliver": 0 },
+    "reviews": { "total": 0, "first_pass": 0 },
+    "retries": 0,
+    "interventions": 0
+  }
+}
