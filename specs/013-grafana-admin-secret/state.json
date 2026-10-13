@@ -14,7 +14,7 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "implement",
+  "stage": "deliver",
   "gates": {
     "spec": "approved",
     "plan": "approved",
@@ -43,7 +43,7 @@
       "review": "each",
       "id": "T1",
       "title": "ExternalSecret + values + sync wave",
-      "status": "in_progress",
+      "status": "done",
       "files": [
         "kubernetes/apps/infrastructure/prometheus-stack/templates/grafana-admin-secret.yaml",
         "kubernetes/apps/infrastructure/prometheus-stack/values.yaml",
@@ -55,15 +55,16 @@
         "AC3",
         "AC4"
       ],
-      "red": "assertion"
+      "red": "assertion",
+      "commit": "7225f18"
     },
     {
       "agent": "implementer",
-      "attempts": 0,
+      "attempts": 1,
       "review": "batch",
       "id": "T2",
       "title": "Docs, vault-write hint, rotation runbook",
-      "status": "todo",
+      "status": "done",
       "files": [
         "docs/GETTING-STARTED.md",
         "mise.toml",
@@ -71,7 +72,8 @@
       ],
       "criteria": [
         "AC5"
-      ]
+      ],
+      "commit": "71274a5"
     }
   ],
   "blocked": null,
@@ -81,7 +83,10 @@
       "intake": "2026-10-13T02:06:46Z",
       "spec": "2026-10-13T02:06:50Z",
       "plan": "2026-10-13T02:10:00Z",
-      "implement": "2026-10-13T02:25:00Z"
+      "implement": "2026-10-13T02:25:00Z",
+      "verify": "2026-10-13T02:29:42Z",
+      "document": "2026-10-13T02:30:00Z",
+      "deliver": "2026-10-13T02:31:00Z"
     },
     "gates": {
       "spec": {
@@ -91,6 +96,9 @@
       "plan": {
         "presented_at": "2026-10-13T02:20:30Z",
         "approved_at": "2026-10-13T02:25:00Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T02:31:00Z"
       }
     },
     "gate_rework": {
@@ -99,10 +107,11 @@
       "deliver": 0
     },
     "reviews": {
-      "total": 2,
-      "first_pass": 2
+      "total": 3,
+      "first_pass": 3
     },
     "retries": 0,
     "interventions": 0
-  }
+  },
+  "living": []
 }

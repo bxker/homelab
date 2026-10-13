@@ -13,7 +13,7 @@
 **Next:** Spec gate
 
 ## architect · plan · done
-2026-10-13T02:20:00Z
+2026-10-13T02:1xZ (estimated, not from date -u)
 
 **Did:** Wrote plan.md: 2 tasks (T1 manifests, review each; T2 docs). Reuses Seafile ExternalSecret pattern; Grafana 8.5.12 `admin.existingSecret` verified in chart templates.
 
@@ -28,7 +28,7 @@
 **Next:** Plan gate
 
 ## implementer · T1 · done
-2026-10-13T02:31:00Z
+2026-10-13T02:2xZ (estimated, not from date -u)
 
 **Did:** Added ExternalSecret `grafana-admin` (from `secret/grafana`), set `grafana.admin.existingSecret`, removed the literal password, moved prometheus-stack to sync wave 6.
 
@@ -43,7 +43,7 @@
 **Next:** review T1
 
 ## infra-reviewer · T1 · done
-2026-10-13T02:33:00Z
+2026-10-13T02:2xZ (estimated, not from date -u)
 
 **Did:** Reviewed T1 diff and before/after renders (offline only, no cluster diff).
 
@@ -56,7 +56,7 @@
 **Next:** security review
 
 ## security-reviewer · T1 · done
-2026-10-13T02:34:00Z
+2026-10-13T02:2xZ (estimated, not from date -u)
 
 **Did:** Checked secrets handling in the diff.
 
@@ -67,3 +67,27 @@
 **Open issues:** none
 
 **Next:** commit T1, T2
+
+## implementer · T2 · done
+2026-10-13T02:29:00Z
+
+**Did:** Added `secret/grafana` to OpenBao setup + vault-write hint, a rotation runbook (force-sync, `reset-admin-password --password-from-stdin`, Multi-Attach note), updated CLAUDE.md secrets + waves.
+
+**Evidence:**
+- Grafana v11.3.0 `commands.go` defines `password-from-stdin` flag
+- `tomllib` parse of mise.toml → ok; #11 `verify_tasks.py` → PASS
+
+**Changed files:** `docs/GETTING-STARTED.md`, `mise.toml`, `CLAUDE.md`
+
+**Open issues:** none
+
+**Next:** batched review, verify
+
+## code-reviewer · batch (T2) · done
+2026-10-13T02:29:30Z
+
+**Did:** Read the T2 diff against spec AC5.
+
+**Findings:** none CRITICAL/HIGH. LOW: GETTING-STARTED Step 6 still lacks the `secret/seafile` put (pre-existing; mise hint has it) → follow-up.
+
+**Next:** verify
