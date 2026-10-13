@@ -10,3 +10,12 @@
 **Changed files:** `specs/017-longhorn-prereqs/spec.md`
 
 **Next:** Spec gate
+
+## architect · plan · done
+2026-10-13T05:01:22Z
+
+**Did:** Wrote plan.md: one shared play + handler, tested for real on the Ubuntu 24.04 sandbox.
+
+**Changed files:** `specs/017-longhorn-prereqs/plan.md`
+
+**Next:** Plan gate

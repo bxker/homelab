@@ -1,6 +1,6 @@
 # Spec: Longhorn prerequisites on every k3s node, and keep multipathd off Longhorn's disks
 
-Ticket: gh:17 · Size: standard · Status: draft
+Ticket: gh:17 · Size: standard · Status: approved
 
 ## Problem
 Only workers get `open-iscsi`/`nfs-common` and a running `iscsid`, but the control plane is untainted, so
@@ -39,9 +39,5 @@ attaches, which breaks volume mounts (Longhorn KB "troubleshooting volume with m
 None.
 
 ## Open questions
-1. **Prerequisites on the control plane, or taint it?** Recommended: install the prerequisites on every
-   node now. It's additive and moves nothing. Tainting the control plane would stop new Longhorn pods
-   there, but any replicas already on its 20 GB disk would need draining first; that belongs with the
-   storage rework (#40). Alternative: taint now, with replica migration steps.
-2. **multipathd:** Recommended: blacklist `sd*` via a drop-in (the KB fix; keeps the service).
-   Alternative: disable and mask multipathd entirely (single-path VMs never need it).
+None. Resolved at the Spec gate: (1) install the prerequisites on every node, no taint (revisit with #40);
+(2) blacklist `sd*` with a multipath drop-in, keep the service.

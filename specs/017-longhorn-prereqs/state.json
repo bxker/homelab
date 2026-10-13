@@ -1,26 +1,68 @@
 {
   "version": 1,
-  "ticket": { "source": "github", "ref": "gh:17", "id": "17", "title": "[P0] Longhorn prerequisites missing on control-plane node (and multipathd conflict)", "url": "https://github.com/bxker/homelab/issues/17", "pr": null },
+  "ticket": {
+    "source": "github",
+    "ref": "gh:17",
+    "id": "17",
+    "title": "[P0] Longhorn prerequisites missing on control-plane node (and multipathd conflict)",
+    "url": "https://github.com/bxker/homelab/issues/17",
+    "pr": null
+  },
   "slug": "017-longhorn-prereqs",
   "branch": "017-longhorn-prereqs",
   "base": "main",
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "spec",
-  "gates": { "spec": "pending", "plan": "pending", "deliver": "pending" },
-  "domains": ["scripting"],
-  "targets": { "lab": "this sandbox (Ubuntu 24.04, no systemd; systemctl stub)" },
-  "commands": { "test": null, "lint": "uvx ansible-lint ansible/playbooks/k3s.yml", "build": null,
-                "validate": ["uvx --from ansible-core ansible-playbook --syntax-check -i ansible/inventory.yml ansible/playbooks/k3s.yml"], "plan": null, "baseline_failures": [] },
+  "stage": "plan",
+  "gates": {
+    "spec": "approved",
+    "plan": "pending",
+    "deliver": "pending"
+  },
+  "domains": [
+    "scripting"
+  ],
+  "targets": {
+    "lab": "this sandbox (Ubuntu 24.04, no systemd; systemctl stub)"
+  },
+  "commands": {
+    "test": null,
+    "lint": "uvx ansible-lint ansible/playbooks/k3s.yml",
+    "build": null,
+    "validate": [
+      "uvx --from ansible-core ansible-playbook --syntax-check -i ansible/inventory.yml ansible/playbooks/k3s.yml"
+    ],
+    "plan": null,
+    "baseline_failures": []
+  },
   "tasks": [],
   "blocked": null,
   "metrics": {
     "started_at": "2026-10-13T04:37:18Z",
-    "stage_started_at": { "intake": "2026-10-13T04:37:18Z", "spec": "2026-10-13T04:38:15Z" },
-    "gates": { "spec": { "presented_at": "2026-10-13T04:38:15Z" } },
-    "gate_rework": { "spec": 0, "plan": 0, "deliver": 0 },
-    "reviews": { "total": 0, "first_pass": 0 },
+    "stage_started_at": {
+      "intake": "2026-10-13T04:37:18Z",
+      "spec": "2026-10-13T04:38:15Z",
+      "plan": "2026-10-13T05:01:22Z"
+    },
+    "gates": {
+      "spec": {
+        "presented_at": "2026-10-13T04:38:15Z",
+        "approved_at": "2026-10-13T05:01:22Z"
+      },
+      "plan": {
+        "presented_at": "2026-10-13T05:01:22Z"
+      }
+    },
+    "gate_rework": {
+      "spec": 0,
+      "plan": 0,
+      "deliver": 0
+    },
+    "reviews": {
+      "total": 0,
+      "first_pass": 0
+    },
     "retries": 0,
     "interventions": 0
   }
