@@ -1,27 +1,87 @@
 {
   "version": 1,
-  "ticket": { "source": "github", "ref": "gh:11", "id": "11", "title": "[P0] `mise run all` destroys every VM and all persistent data", "url": "https://github.com/bxker/homelab/issues/11", "pr": null },
+  "ticket": {
+    "source": "github",
+    "ref": "gh:11",
+    "id": "11",
+    "title": "[P0] `mise run all` destroys every VM and all persistent data",
+    "url": "https://github.com/bxker/homelab/issues/11",
+    "pr": null
+  },
   "slug": "011-nondestructive-mise-all",
   "branch": "011-nondestructive-mise-all",
   "base": "main",
   "size": "small",
   "mode": "inline",
   "delivery": "normal",
-  "stage": "spec",
-  "gates": { "spec": "pending", "plan": "skipped", "deliver": "pending" },
-  "domains": ["scripting"],
+  "stage": "implement",
+  "gates": {
+    "spec": "approved",
+    "plan": "skipped",
+    "deliver": "pending"
+  },
+  "domains": [
+    "scripting"
+  ],
   "targets": {},
-  "commands": { "test": null, "lint": null, "build": null,
-                "validate": ["python3 -c 'import tomllib;tomllib.load(open(\"mise.toml\",\"rb\"))'", "bash -n on each [tasks.*].run script (extracted via tomllib)"],
-                "plan": null, "baseline_failures": [] },
-  "tasks": [],
+  "commands": {
+    "test": null,
+    "lint": null,
+    "build": null,
+    "validate": [
+      "python3 -c 'import tomllib;tomllib.load(open(\"mise.toml\",\"rb\"))'",
+      "bash -n on each [tasks.*].run script (extracted via tomllib)"
+    ],
+    "plan": null,
+    "baseline_failures": []
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Rework mise tasks + docs",
+      "agent": "engine",
+      "status": "in_progress",
+      "attempts": 1,
+      "files": [
+        "mise.toml",
+        ".gitignore",
+        "CLAUDE.md",
+        "README.md",
+        "docs/GETTING-STARTED.md"
+      ],
+      "criteria": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4",
+        "AC5"
+      ],
+      "review": "batch"
+    }
+  ],
   "blocked": null,
   "metrics": {
     "started_at": "2026-10-13T00:57:14Z",
-    "stage_started_at": { "intake": "2026-10-13T00:57:14Z", "spec": "2026-10-13T00:57:34Z" },
-    "gates": { "spec": { "presented_at": "2026-10-13T00:58:00Z" } },
-    "gate_rework": { "spec": 0, "plan": 0, "deliver": 0 },
-    "reviews": { "total": 0, "first_pass": 0 },
+    "stage_started_at": {
+      "intake": "2026-10-13T00:57:14Z",
+      "spec": "2026-10-13T00:57:34Z",
+      "implement": "2026-10-13T01:05:00Z"
+    },
+    "gates": {
+      "spec": {
+        "presented_at": "2026-10-13T00:58:00Z",
+        "approved_at": "2026-10-13T01:05:00Z"
+      }
+    },
+    "gate_rework": {
+      "spec": 0,
+      "plan": 0,
+      "deliver": 0
+    },
+    "reviews": {
+      "total": 0,
+      "first_pass": 0
+    },
     "retries": 0,
     "interventions": 0
   }

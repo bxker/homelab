@@ -1,6 +1,6 @@
 # Spec: Make `mise run all` non-destructive
 
-Ticket: gh:11 · Size: small · Status: draft
+Ticket: gh:11 · Size: small · Status: approved
 
 ## Problem
 `mise run all` (and `mise run cluster`) silently runs `tofu destroy -auto-approve` before
@@ -30,4 +30,4 @@ Destroy failures are also hidden by `2>/dev/null || true`.
 None.
 
 ## Open questions
-1. **AC4 approach** — *`tofu apply -auto-approve` can also replace VMs (e.g. a changed disk/image forces replacement)*. Options: (a) `infra` runs `tofu plan -out`, auto-applies only if the plan has zero deletes/replaces, otherwise prompts (recommended: `all` stays hands-off for the normal case); (b) drop `-auto-approve` from apply entirely (simplest, but `mise run all` always stops for "yes"); (c) leave apply as is (out of scope).
+None. OQ1 resolved at the Spec gate: option (a), plan-check — auto-apply only plans with no deletes/replaces, prompt otherwise.
