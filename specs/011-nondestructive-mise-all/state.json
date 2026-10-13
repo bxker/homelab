@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "ticket": {
+    "source": "github",
+    "ref": "gh:11",
+    "id": "11",
+    "title": "[P0] `mise run all` destroys every VM and all persistent data",
+    "url": "https://github.com/bxker/homelab/issues/11",
+    "pr": "https://github.com/bxker/homelab/pull/43"
+  },
+  "slug": "011-nondestructive-mise-all",
+  "branch": "011-nondestructive-mise-all",
+  "base": "main",
+  "size": "small",
+  "mode": "inline",
+  "delivery": "normal",
+  "stage": "done",
+  "gates": {
+    "spec": "approved",
+    "plan": "skipped",
+    "deliver": "approved"
+  },
+  "domains": [
+    "scripting"
+  ],
+  "targets": {},
+  "commands": {
+    "test": null,
+    "lint": null,
+    "build": null,
+    "validate": [
+      "python3 -c 'import tomllib;tomllib.load(open(\"mise.toml\",\"rb\"))'",
+      "bash -n on each [tasks.*].run script (extracted via tomllib)",
+      "python3 -I specs/011-nondestructive-mise-all/verify_tasks.py ."
+    ],
+    "plan": null,
+    "baseline_failures": []
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Rework mise tasks + docs",
+      "agent": "engine",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "mise.toml",
+        ".gitignore",
+        "CLAUDE.md",
+        "README.md",
+        "docs/GETTING-STARTED.md"
+      ],
+      "criteria": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4",
+        "AC5"
+      ],
+      "review": "batch",
+      "commit": "a272ba6"
+    }
+  ],
+  "blocked": null,
+  "metrics": {
+    "started_at": "2026-10-13T00:57:14Z",
+    "stage_started_at": {
+      "intake": "2026-10-13T00:57:14Z",
+      "spec": "2026-10-13T00:57:34Z",
+      "implement": "2026-10-13T01:05:00Z",
+      "verify": "2026-10-13T01:52:30Z",
+      "document": "2026-10-13T01:53:00Z",
+      "deliver": "2026-10-13T01:54:00Z",
+      "done": "2026-10-13T02:01:46Z"
+    },
+    "gates": {
+      "spec": {
+        "presented_at": "2026-10-13T00:58:00Z",
+        "approved_at": "2026-10-13T01:05:00Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T01:54:00Z",
+        "approved_at": "2026-10-13T02:01:46Z"
+      }
+    },
+    "gate_rework": {
+      "spec": 0,
+      "plan": 0,
+      "deliver": 0
+    },
+    "reviews": {
+      "total": 1,
+      "first_pass": 1
+    },
+    "retries": 0,
+    "interventions": 0
+  },
+  "living": []
+}
