@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "ticket": { "source": "github", "ref": "gh:18", "id": "18", "title": "[P0] Repo hygiene: remove .DS_Store files and fix stale docs", "url": "https://github.com/bxker/homelab/issues/18", "pr": null },
+  "slug": "018-repo-hygiene",
+  "branch": "018-repo-hygiene",
+  "base": "main",
+  "size": "standard",
+  "mode": "fallback",
+  "delivery": "normal",
+  "stage": "spec",
+  "gates": { "spec": "pending", "plan": "pending", "deliver": "pending" },
+  "domains": ["kubernetes", "gitops"],
+  "targets": {},
+  "commands": { "test": null, "lint": null, "build": null, "validate": [], "plan": null, "baseline_failures": [] },
+  "tasks": [],
+  "blocked": null,
+  "metrics": {
+    "started_at": "2026-10-13T03:56:34Z",
+    "stage_started_at": { "intake": "2026-10-13T03:56:34Z", "spec": "2026-10-13T03:58:00Z" },
+    "gates": { "spec": { "presented_at": "2026-10-13T03:57:14Z" } },
+    "gate_rework": { "spec": 0, "plan": 0, "deliver": 0 },
+    "reviews": { "total": 0, "first_pass": 0 },
+    "retries": 0,
+    "interventions": 0
+  }
+}
