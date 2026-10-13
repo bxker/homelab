@@ -14,10 +14,10 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "plan",
+  "stage": "implement",
   "gates": {
     "spec": "approved",
-    "plan": "pending",
+    "plan": "approved",
     "deliver": "pending"
   },
   "domains": [
@@ -36,14 +36,51 @@
     "plan": null,
     "baseline_failures": []
   },
-  "tasks": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Pin, version check, token via config.yaml",
+      "agent": "implementer",
+      "status": "in_progress",
+      "attempts": 1,
+      "files": [
+        "ansible/inventory.yml",
+        "ansible/playbooks/k3s.yml"
+      ],
+      "criteria": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4",
+        "AC6"
+      ],
+      "review": "each",
+      "red": "assertion"
+    },
+    {
+      "id": "T2",
+      "title": "Renovate tracks k3s_version; doc note",
+      "agent": "implementer",
+      "status": "todo",
+      "attempts": 0,
+      "files": [
+        "renovate.json",
+        "CLAUDE.md"
+      ],
+      "criteria": [
+        "AC5"
+      ],
+      "review": "batch"
+    }
+  ],
   "blocked": null,
   "metrics": {
     "started_at": "2026-10-13T03:46:33Z",
     "stage_started_at": {
       "intake": "2026-10-13T03:46:33Z",
       "spec": "2026-10-13T03:48:00Z",
-      "plan": "2026-10-13T03:49:56Z"
+      "plan": "2026-10-13T03:49:56Z",
+      "implement": "2026-10-13T03:50:33Z"
     },
     "gates": {
       "spec": {
@@ -51,7 +88,8 @@
         "approved_at": "2026-10-13T03:49:56Z"
       },
       "plan": {
-        "presented_at": "2026-10-13T03:49:56Z"
+        "presented_at": "2026-10-13T03:49:56Z",
+        "approved_at": "2026-10-13T03:50:33Z"
       }
     },
     "gate_rework": {
@@ -60,8 +98,8 @@
       "deliver": 0
     },
     "reviews": {
-      "total": 0,
-      "first_pass": 0
+      "total": 1,
+      "first_pass": 1
     },
     "retries": 0,
     "interventions": 0

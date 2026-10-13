@@ -2,6 +2,10 @@ all:
   vars:
     ansible_user: root
     ansible_python_interpreter: /usr/bin/python3
+    # k3s release every node installs (server and agents). The playbook doesn't
+    # upgrade nodes that already run k3s: it stops if they run another version,
+    # so bump this only together with an upgrade of the existing nodes.
+    k3s_version: v1.36.5+k3s1
   children:
     proxmox:
       hosts:

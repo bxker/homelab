@@ -1,4 +1,32 @@
 ---
+- name: Check installed k3s matches k3s_version
+  hosts: k3s_cp:k3s_workers
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+
+  tasks:
+    - name: Look for an existing k3s binary
+      ansible.builtin.stat:
+        path: /usr/local/bin/k3s
+      register: k3s_binary
+
+    - name: Read installed k3s version
+      ansible.builtin.command: /usr/local/bin/k3s --version
+      register: k3s_installed
+      changed_when: false
+      when: k3s_binary.stat.exists
+
+    - name: Stop if a node runs a different version than k3s_version
+      ansible.builtin.assert:
+        that: k3s_version in k3s_installed.stdout.split()
+        fail_msg: >-
+          {{ inventory_hostname }} runs "{{ k3s_installed.stdout_lines[0] }}" but
+          k3s_version is {{ k3s_version }}. Set k3s_version in ansible/inventory.yml to
+          the installed version, or upgrade the nodes first. Nothing was changed.
+        quiet: true
+      when: k3s_binary.stat.exists
+
 - name: Install k3s control plane
   hosts: k3s_cp
   become: true
@@ -27,14 +55,25 @@
         dest: /etc/resolv.conf
         mode: "0644"
 
+    - name: Download k3s install script for k3s_version
+      ansible.builtin.get_url:
+        url: "https://raw.githubusercontent.com/k3s-io/k3s/{{ k3s_version }}/install.sh"
+        dest: "/usr/local/share/k3s-install-{{ k3s_version }}.sh"
+        mode: "0755"
+
     - name: Install k3s server
-      ansible.builtin.shell: |
-        curl -sfL https://get.k3s.io | sh -s - server \
-          --cluster-init \
-          --node-ip {{ ansible_host }} \
-          --tls-san {{ ansible_host }}
-      args:
+      ansible.builtin.command:
+        argv:
+          - "/usr/local/share/k3s-install-{{ k3s_version }}.sh"
+          - server
+          - --cluster-init
+          - --node-ip
+          - "{{ ansible_host }}"
+          - --tls-san
+          - "{{ ansible_host }}"
         creates: /usr/local/bin/k3s
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
 
     - name: Wait for k3s to be ready
       ansible.builtin.wait_for:
@@ -45,10 +84,12 @@
       ansible.builtin.slurp:
         src: /var/lib/rancher/k3s/server/node-token
       register: k3s_node_token
+      no_log: true
 
     - name: Set token fact
       ansible.builtin.set_fact:
         k3s_token: "{{ k3s_node_token.content | b64decode | trim }}"
+      no_log: true
 
     - name: Fetch kubeconfig
       ansible.builtin.fetch:
@@ -123,11 +164,34 @@
         state: started
         enabled: true
 
+    - name: Create k3s config directory
+      ansible.builtin.file:
+        path: /etc/rancher/k3s
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    # The agent reads server and token from here, so the token never appears
+    # on a command line or in a process environment.
+    - name: Write k3s agent config (server and join token)
+      ansible.builtin.copy:
+        dest: /etc/rancher/k3s/config.yaml
+        content: "{{ {'server': 'https://' ~ k3s_cp_host ~ ':6443', 'token': k3s_token} | to_nice_yaml }}"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+
+    - name: Download k3s install script for k3s_version
+      ansible.builtin.get_url:
+        url: "https://raw.githubusercontent.com/k3s-io/k3s/{{ k3s_version }}/install.sh"
+        dest: "/usr/local/share/k3s-install-{{ k3s_version }}.sh"
+        mode: "0755"
+
     - name: Install k3s agent
-      ansible.builtin.shell: |
-        curl -sfL https://get.k3s.io | \
-          K3S_URL=https://{{ k3s_cp_host }}:6443 \
-          K3S_TOKEN={{ k3s_token }} \
-          sh -
-      args:
+      ansible.builtin.command:
+        argv: ["/usr/local/share/k3s-install-{{ k3s_version }}.sh", agent]
         creates: /usr/local/bin/k3s
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"

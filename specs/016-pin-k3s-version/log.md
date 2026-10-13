@@ -32,3 +32,27 @@
 **Open issues:** none
 
 **Next:** Plan gate
+
+## implementer · T1 · done
+2026-10-13T03:53:05Z
+
+**Did:** `k3s_version` in inventory; first play checks installed k3s against it (any_errors_fatal); both installs download `install.sh` from the pinned tag (versioned filename) and run it via `command` argv with `INSTALL_K3S_VERSION`; agents read server/token from `/etc/rancher/k3s/config.yaml` (0600, no_log); token slurp/set_fact no_log.
+
+**Evidence:**
+- `check_k3s.py` → AC1–AC4, AC6 PASS (two check-script selection bugs fixed first; both selections still pass on baseline, see .runs)
+- version-check play run locally: no k3s → skipped; matching → ok; mismatched v1.33.5 → both hosts fail with the message
+- agent config rendered with a sample token → valid YAML, mode 600
+- `ansible-playbook --syntax-check` ok; `ansible-lint` 4 failures → 0 (production profile)
+
+**Changed files:** `ansible/inventory.yml`, `ansible/playbooks/k3s.yml`
+
+**Next:** review T1
+
+## infra-reviewer + security-reviewer · T1 · done
+2026-10-13T03:53:05Z
+
+**Findings:**
+- MEDIUM (fixed in T1): `get_url` without `force` keeps a stale `install.sh` after a version bump → versioned filename.
+- LOW: existing agents keep `K3S_URL`/`K3S_TOKEN` in `/etc/systemd/system/k3s-agent.service.env` from the old install; the new config.yaml duplicates them (no restart). Cleaning that file needs a restart, so it's left out of scope.
+
+**Next:** commit T1, T2

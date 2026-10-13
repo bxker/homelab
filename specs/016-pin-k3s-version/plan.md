@@ -1,6 +1,6 @@
 # Plan: Pin the k3s version and keep the join token off command lines
 
-Spec: [spec.md](spec.md) · Status: draft
+Spec: [spec.md](spec.md) · Status: approved
 
 ## Callouts
 - **New dependencies:** none (Renovate custom manager is config)
