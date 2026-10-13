@@ -74,3 +74,28 @@
 **Findings:** none. Until `ingress-auth` syncs, both routes are refused (fail closed); Longhorn UI becomes unreachable until `secret/ingress-auth` is written (expected, on the Deliver checklist).
 
 **Next:** commit T2, T3
+
+## implementer · T3 · done
+2026-10-13T03:39:12Z
+
+**Did:** AdGuard UI Ingress at `adguard.homelab.local` (homelab-ca TLS, `adguard-basic-auth@kubernetescrd`); `adguard-home-http` → ClusterIP (drops the .203 pin).
+
+**Evidence:**
+- `check_auth.py` → RESULT: PASS (13/13); `helm lint` 0 failed
+- k8s v1.31 `service/strategy.go` `dropTypeDependentFields` zeroes nodePorts on LoadBalancer→ClusterIP
+
+**Changed files:** `adguard-home/templates/service.yaml`, `adguard-home/templates/ingress.yaml`
+
+**Open issues:** `metallb/templates/pool.yaml` comment still lists ".203 AdGuard UI" (outside task scope → Deliver gate)
+
+**Next:** review T3
+
+## infra-reviewer + security-reviewer · T3 · done
+2026-10-13T03:39:12Z
+
+**Findings:**
+- LOW: stale pin comment in metallb pool.yaml (see above).
+- LOW: #15's `check_ips.py` AC2 (UI pinned .203) now fails by design; superseded by this spec.
+- No new exposure: UI moves from an unauthenticated LB IP to an authenticated Ingress.
+
+**Next:** commit T3, T4
