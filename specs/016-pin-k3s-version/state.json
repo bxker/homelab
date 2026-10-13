@@ -1,6 +1,13 @@
 {
   "version": 1,
-  "ticket": { "source": "github", "ref": "gh:16", "id": "16", "title": "[P0] Pin k3s version and stop passing the join token on the command line", "url": "https://github.com/bxker/homelab/issues/16", "pr": null },
+  "ticket": {
+    "source": "github",
+    "ref": "gh:16",
+    "id": "16",
+    "title": "[P0] Pin k3s version and stop passing the join token on the command line",
+    "url": "https://github.com/bxker/homelab/issues/16",
+    "pr": null
+  },
   "slug": "016-pin-k3s-version",
   "branch": "016-pin-k3s-version",
   "base": "main",
@@ -8,18 +15,50 @@
   "mode": "fallback",
   "delivery": "normal",
   "stage": "spec",
-  "gates": { "spec": "pending", "plan": "pending", "deliver": "pending" },
-  "domains": ["scripting"],
+  "gates": {
+    "spec": "pending",
+    "plan": "pending",
+    "deliver": "pending"
+  },
+  "domains": [
+    "scripting"
+  ],
   "targets": {},
-  "commands": { "test": null, "lint": null, "build": null, "validate": [], "plan": null, "baseline_failures": [] },
+  "commands": {
+    "test": null,
+    "lint": null,
+    "build": null,
+    "validate": [],
+    "plan": null,
+    "baseline_failures": []
+  },
   "tasks": [],
-  "blocked": null,
+  "blocked": {
+    "reason": "Spec gate: waiting for the owner's live k3s version (OQ1); OQ2 answered: uvx tooling",
+    "stage": "spec",
+    "task": null,
+    "since": "2026-10-13T03:47:41Z"
+  },
   "metrics": {
     "started_at": "2026-10-13T03:46:33Z",
-    "stage_started_at": { "intake": "2026-10-13T03:46:33Z", "spec": "2026-10-13T03:48:00Z" },
-    "gates": { "spec": { "presented_at": "2026-10-13T03:47:13Z" } },
-    "gate_rework": { "spec": 0, "plan": 0, "deliver": 0 },
-    "reviews": { "total": 0, "first_pass": 0 },
+    "stage_started_at": {
+      "intake": "2026-10-13T03:46:33Z",
+      "spec": "2026-10-13T03:48:00Z"
+    },
+    "gates": {
+      "spec": {
+        "presented_at": "2026-10-13T03:47:13Z"
+      }
+    },
+    "gate_rework": {
+      "spec": 0,
+      "plan": 0,
+      "deliver": 0
+    },
+    "reviews": {
+      "total": 0,
+      "first_pass": 0
+    },
     "retries": 0,
     "interventions": 0
   }
