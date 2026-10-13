@@ -97,9 +97,32 @@ everything first (after you type the cluster name).
 This runs four phases in order:
 
 1. **infra** — Terraform downloads Ubuntu 24.04 cloud image, creates 3 VMs with cloud-init networking and your SSH key
-2. **k3s-install** — Ansible installs k3s on the control plane, joins workers, writes `~/.kube/config`
+2. **k3s-install** — Ansible installs k3s on the control plane, joins workers, writes `~/.kube/config`.
+   k3s's own Traefik and ServiceLB are disabled (ArgoCD runs Traefik; MetalLB hands out IPs).
 3. **gitops** — ArgoCD installs, picks up app-of-apps, deploys all charts
 4. **configure** — Ansible hardens the Proxmox host
+
+### Migrating a cluster that still runs k3s's bundled Traefik
+
+Clusters installed before this change still run k3s's own Traefik and ServiceLB. The next
+`mise run k3s-install` removes them once, with a ~30 s API restart (workloads keep running):
+
+1. It deletes the Helm release record of k3s's `traefik-crd` chart. Without this, k3s's
+   uninstall would delete every `traefik.io` CRD and with them every IngressRoute and Middleware.
+2. It restarts k3s with `disable: [traefik, servicelb]` in `/etc/rancher/k3s/config.yaml`.
+3. It removes ServiceLB's `service.kubernetes.io/load-balancer-cleanup` finalizer from every
+   LoadBalancer Service (otherwise they could never be deleted) and waits for the uninstall.
+4. k3s's uninstall also deletes the shared `traefik` IngressClass; ArgoCD recreates it. Until it
+   does, Ingresses aren't routed. If the playbook warns that it's missing, sync the `traefik` app.
+
+Check afterwards:
+
+```bash
+kubectl -n kube-system get helmchart                        # no traefik / traefik-crd
+kubectl -n kube-system get ds | grep svclb                  # nothing
+kubectl get ingressclass                                    # one: traefik
+kubectl get svc -A --field-selector spec.type=LoadBalancer  # IPs from MetalLB (.200, .201, ...)
+```
 
 ## Step 5: Access Your Services
 
