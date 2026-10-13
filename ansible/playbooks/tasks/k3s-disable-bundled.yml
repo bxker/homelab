@@ -1,0 +1,133 @@
+---
+# Turn off k3s's bundled Traefik and ServiceLB (ArgoCD runs Traefik, MetalLB
+# hands out LoadBalancer IPs). On a node that already runs the bundled
+# Traefik, a plain `disable` would make k3s uninstall its traefik-crd chart,
+# deleting every traefik.io CRD and with them every IngressRoute and
+# Middleware. This runs the sequence tested in specs/012-disable-k3s-bundled/lab/.
+
+- name: Look for an existing k3s binary
+  ansible.builtin.stat:
+    path: "{{ k3s_bin }}"
+  register: k3s_present
+
+- name: Find k3s's bundled Traefik HelmCharts
+  ansible.builtin.command: >-
+    {{ k3s_bin }} kubectl -n kube-system get helmchart traefik traefik-crd
+    --ignore-not-found -o name
+  register: k3s_bundled
+  changed_when: false
+  when: k3s_present.stat.exists
+
+- name: Forget the traefik-crd Helm release so its uninstall keeps the CRDs
+  ansible.builtin.command: >-
+    {{ k3s_bin }} kubectl -n kube-system delete secret
+    -l owner=helm,name=traefik-crd --ignore-not-found
+  register: k3s_crd_release
+  changed_when: "'deleted' in k3s_crd_release.stdout"
+  when: k3s_present.stat.exists and 'traefik-crd' in k3s_bundled.stdout
+
+- name: Create k3s config directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write k3s server config (disable bundled Traefik and ServiceLB)
+  ansible.builtin.copy:
+    dest: /etc/rancher/k3s/config.yaml
+    content: |
+      # Managed by Ansible (ansible/playbooks/tasks/k3s-disable-bundled.yml).
+      # ArgoCD runs Traefik and MetalLB assigns LoadBalancer IPs.
+      disable:
+        - traefik
+        - servicelb
+    owner: root
+    group: root
+    mode: "0600"
+  register: k3s_server_config
+
+- name: Decide whether k3s must restart
+  ansible.builtin.set_fact:
+    k3s_needs_restart: >-
+      {{ k3s_present.stat.exists and (k3s_server_config.changed or k3s_bundled.stdout | length > 0) }}
+
+- name: Restart k3s to apply the config
+  ansible.builtin.systemd:
+    name: k3s
+    state: restarted
+  when: k3s_needs_restart | bool
+
+- name: Wait for the Kubernetes API after the restart
+  ansible.builtin.command: "{{ k3s_bin }} kubectl get --raw=/readyz"
+  register: k3s_readyz
+  until: k3s_readyz.rc == 0
+  retries: 30
+  delay: 5
+  changed_when: false
+  when: k3s_needs_restart | bool
+
+- name: Read LoadBalancer Services
+  ansible.builtin.command: "{{ k3s_bin }} kubectl get svc -A -o json"
+  register: k3s_services
+  changed_when: false
+  when: k3s_needs_restart | bool
+
+# ServiceLB adds this finalizer to every LoadBalancer Service and is the only
+# thing that removes it. With ServiceLB off, deleting such a Service (including
+# the bundled Traefik's, which its uninstall waits for) would hang forever.
+- name: Remove ServiceLB's finalizer from LoadBalancer Services
+  ansible.builtin.command:
+    argv:
+      - "{{ k3s_bin }}"
+      - kubectl
+      - -n
+      - "{{ item.metadata.namespace }}"
+      - patch
+      - svc
+      - "{{ item.metadata.name }}"
+      - --type=merge
+      - -p
+      - "{{ {'metadata': {'finalizers': item.metadata.finalizers | reject('equalto', k3s_servicelb_finalizer) | list}} | to_json }}"
+  loop: >-
+    {{ (k3s_services.stdout | from_json)['items']
+       | selectattr('spec.type', 'equalto', 'LoadBalancer')
+       | selectattr('metadata.finalizers', 'defined')
+       | selectattr('metadata.finalizers', 'contains', k3s_servicelb_finalizer)
+       | list }}
+  loop_control:
+    label: "{{ item.metadata.namespace }}/{{ item.metadata.name }}"
+  changed_when: true
+  when: k3s_needs_restart | bool
+
+- name: Wait for k3s to finish uninstalling its Traefik
+  ansible.builtin.command: >-
+    {{ k3s_bin }} kubectl -n kube-system get helmchart traefik traefik-crd
+    --ignore-not-found -o name
+  register: k3s_bundled_left
+  until: k3s_bundled_left.stdout | length == 0
+  retries: 30
+  delay: 10
+  changed_when: false
+  when: k3s_needs_restart | bool
+
+# The uninstall also deletes the `traefik` IngressClass, which ArgoCD's
+# Traefik app owns too; its selfHeal recreates it.
+- name: Wait for ArgoCD to restore the traefik IngressClass
+  ansible.builtin.command: >-
+    {{ k3s_bin }} kubectl get ingressclass traefik --ignore-not-found -o name
+  register: k3s_ingressclass
+  until: k3s_ingressclass.stdout | length > 0
+  retries: "{{ k3s_ingressclass_wait_retries }}"
+  delay: 10
+  changed_when: false
+  failed_when: false
+  when: k3s_needs_restart | bool and 'traefik' in k3s_bundled.stdout
+
+- name: Warn if the traefik IngressClass is still missing
+  ansible.builtin.debug:
+    msg: >-
+      IngressClass traefik hasn't come back yet. Ingresses aren't routed until it
+      does: sync the `traefik` app in ArgoCD (it recreates the IngressClass).
+  when: k3s_ingressclass is not skipped and k3s_ingressclass.stdout | default('') | length == 0

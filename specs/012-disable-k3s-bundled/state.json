@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "ticket": {
+    "source": "github",
+    "ref": "gh:12",
+    "id": "12",
+    "title": "[P0] Disable k3s bundled Traefik and ServiceLB (conflict with ArgoCD Traefik + MetalLB)",
+    "url": "https://github.com/bxker/homelab/issues/12",
+    "pr": "https://github.com/bxker/homelab/pull/49"
+  },
+  "slug": "012-disable-k3s-bundled",
+  "branch": "012-disable-k3s-bundled",
+  "base": "main",
+  "size": "standard",
+  "mode": "fallback",
+  "delivery": "normal",
+  "stage": "done",
+  "gates": {
+    "spec": "approved",
+    "plan": "approved",
+    "deliver": "approved"
+  },
+  "domains": [
+    "scripting",
+    "kubernetes"
+  ],
+  "targets": {
+    "lab": "local throwaway k3s v1.36.5 in the sandbox (not the owner's cluster)"
+  },
+  "commands": {
+    "test": null,
+    "lint": "uvx ansible-lint ansible/playbooks/k3s.yml",
+    "build": null,
+    "validate": [
+      "uvx --from ansible-core ansible-playbook --syntax-check -i ansible/inventory.yml ansible/playbooks/k3s.yml"
+    ],
+    "plan": null,
+    "baseline_failures": []
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Task file + include",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "ansible/playbooks/tasks/k3s-disable-bundled.yml",
+        "ansible/playbooks/k3s.yml"
+      ],
+      "criteria": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4",
+        "AC5"
+      ],
+      "review": "each",
+      "red": "assertion",
+      "commit": "bdcf8dd"
+    },
+    {
+      "id": "T2",
+      "title": "Docs",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "CLAUDE.md",
+        "docs/GETTING-STARTED.md"
+      ],
+      "criteria": [
+        "AC6"
+      ],
+      "review": "batch",
+      "commit": "0962679"
+    }
+  ],
+  "blocked": null,
+  "metrics": {
+    "started_at": "2026-10-13T04:05:00Z",
+    "stage_started_at": {
+      "intake": "2026-10-13T04:05:00Z",
+      "spec": "2026-10-13T04:24:36Z",
+      "plan": "2026-10-13T04:30:03Z",
+      "implement": "2026-10-13T04:30:46Z",
+      "verify": "2026-10-13T04:34:43Z",
+      "document": "2026-10-13T04:35:09Z",
+      "deliver": "2026-10-13T04:35:09Z",
+      "done": "2026-10-13T04:36:58Z"
+    },
+    "gates": {
+      "spec": {
+        "presented_at": "2026-10-13T04:24:36Z",
+        "approved_at": "2026-10-13T04:30:03Z"
+      },
+      "plan": {
+        "presented_at": "2026-10-13T04:30:03Z",
+        "approved_at": "2026-10-13T04:30:46Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T04:35:09Z",
+        "approved_at": "2026-10-13T04:36:58Z"
+      }
+    },
+    "gate_rework": {
+      "spec": 0,
+      "plan": 0,
+      "deliver": 0
+    },
+    "reviews": {
+      "total": 2,
+      "first_pass": 2
+    },
+    "retries": 0,
+    "interventions": 0
+  },
+  "living": []
+}
