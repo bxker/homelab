@@ -19,3 +19,22 @@
 **Changed files:** `specs/017-longhorn-prereqs/plan.md`
 
 **Next:** Plan gate
+
+## implementer · T1 · done
+2026-10-13T05:04:20Z
+
+**Did:** New "Install Longhorn prerequisites" play on `k3s_cp:k3s_workers` (apt open-iscsi/nfs-common, iscsi_tcp at boot + now, iscsid, multipath drop-in + restart handler); removed the workers-only copy.
+
+**Evidence:**
+- syntax-check ok; ansible-lint production; #16 `check_k3s.py` PASS (version check still first play)
+- sandbox (Ubuntu 24.04, system python3.12, stubs for systemctl/modprobe): run1 ok=10 changed=6, one `systemctl restart multipathd`; run2 changed=1 (only "Load iscsi_tcp now": the modprobe stub can't create /sys/module/iscsi_tcp), no multipathd restart
+- `multipath -t` shows `devnode "^sd[a-z0-9]+"` merged into the blacklist
+
+**Changed files:** `ansible/playbooks/k3s.yml`
+
+## infra-reviewer · T1 · done
+2026-10-13T05:04:20Z
+
+**Findings:** none CRITICAL/HIGH. LOW: restarting multipathd doesn't release maps already in use; if a Longhorn volume was already claimed, a node reboot clears it (noted in docs).
+
+**Next:** commit T1, T2

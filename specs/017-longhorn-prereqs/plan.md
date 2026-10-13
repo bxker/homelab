@@ -1,6 +1,6 @@
 # Plan: Longhorn prerequisites on every k3s node, and keep multipathd off Longhorn's disks
 
-Spec: [spec.md](spec.md) · Status: draft
+Spec: [spec.md](spec.md) · Status: approved
 
 ## Callouts
 - **New dependencies:** none (ansible.builtin only)

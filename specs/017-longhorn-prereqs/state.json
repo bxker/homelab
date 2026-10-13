@@ -14,10 +14,10 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "plan",
+  "stage": "implement",
   "gates": {
     "spec": "approved",
-    "plan": "pending",
+    "plan": "approved",
     "deliver": "pending"
   },
   "domains": [
@@ -36,14 +36,48 @@
     "plan": null,
     "baseline_failures": []
   },
-  "tasks": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Prereq play for all k3s nodes",
+      "agent": "implementer",
+      "status": "in_progress",
+      "attempts": 1,
+      "files": [
+        "ansible/playbooks/k3s.yml"
+      ],
+      "criteria": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4"
+      ],
+      "review": "each",
+      "red": "assertion"
+    },
+    {
+      "id": "T2",
+      "title": "Docs",
+      "agent": "implementer",
+      "status": "todo",
+      "attempts": 0,
+      "files": [
+        "docs/GETTING-STARTED.md"
+      ],
+      "criteria": [
+        "AC5"
+      ],
+      "review": "batch"
+    }
+  ],
   "blocked": null,
   "metrics": {
     "started_at": "2026-10-13T04:37:18Z",
     "stage_started_at": {
       "intake": "2026-10-13T04:37:18Z",
       "spec": "2026-10-13T04:38:15Z",
-      "plan": "2026-10-13T05:01:22Z"
+      "plan": "2026-10-13T05:01:22Z",
+      "implement": "2026-10-13T05:01:50Z"
     },
     "gates": {
       "spec": {
@@ -51,7 +85,8 @@
         "approved_at": "2026-10-13T05:01:22Z"
       },
       "plan": {
-        "presented_at": "2026-10-13T05:01:22Z"
+        "presented_at": "2026-10-13T05:01:22Z",
+        "approved_at": "2026-10-13T05:01:50Z"
       }
     },
     "gate_rework": {
@@ -60,8 +95,8 @@
       "deliver": 0
     },
     "reviews": {
-      "total": 0,
-      "first_pass": 0
+      "total": 1,
+      "first_pass": 1
     },
     "retries": 0,
     "interventions": 0
