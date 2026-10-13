@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "ticket": {
+    "source": "github",
+    "ref": "gh:17",
+    "id": "17",
+    "title": "[P0] Longhorn prerequisites missing on control-plane node (and multipathd conflict)",
+    "url": "https://github.com/bxker/homelab/issues/17",
+    "pr": "https://github.com/bxker/homelab/pull/50"
+  },
+  "slug": "017-longhorn-prereqs",
+  "branch": "017-longhorn-prereqs",
+  "base": "main",
+  "size": "standard",
+  "mode": "fallback",
+  "delivery": "normal",
+  "stage": "done",
+  "gates": {
+    "spec": "approved",
+    "plan": "approved",
+    "deliver": "approved"
+  },
+  "domains": [
+    "scripting"
+  ],
+  "targets": {
+    "lab": "this sandbox (Ubuntu 24.04, no systemd; systemctl stub)"
+  },
+  "commands": {
+    "test": null,
+    "lint": "uvx ansible-lint ansible/playbooks/k3s.yml",
+    "build": null,
+    "validate": [
+      "uvx --from ansible-core ansible-playbook --syntax-check -i ansible/inventory.yml ansible/playbooks/k3s.yml"
+    ],
+    "plan": null,
+    "baseline_failures": []
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Prereq play for all k3s nodes",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "ansible/playbooks/k3s.yml"
+      ],
+      "criteria": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4"
+      ],
+      "review": "each",
+      "red": "assertion",
+      "commit": "9f52668"
+    },
+    {
+      "id": "T2",
+      "title": "Docs",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "docs/GETTING-STARTED.md"
+      ],
+      "criteria": [
+        "AC5"
+      ],
+      "review": "batch",
+      "commit": "8f717f4"
+    }
+  ],
+  "blocked": null,
+  "metrics": {
+    "started_at": "2026-10-13T04:37:18Z",
+    "stage_started_at": {
+      "intake": "2026-10-13T04:37:18Z",
+      "spec": "2026-10-13T04:38:15Z",
+      "plan": "2026-10-13T05:01:22Z",
+      "implement": "2026-10-13T05:01:50Z",
+      "verify": "2026-10-13T05:04:43Z",
+      "document": "2026-10-13T05:05:07Z",
+      "deliver": "2026-10-13T05:05:07Z",
+      "done": "2026-10-13T05:07:02Z"
+    },
+    "gates": {
+      "spec": {
+        "presented_at": "2026-10-13T04:38:15Z",
+        "approved_at": "2026-10-13T05:01:22Z"
+      },
+      "plan": {
+        "presented_at": "2026-10-13T05:01:22Z",
+        "approved_at": "2026-10-13T05:01:50Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T05:05:07Z",
+        "approved_at": "2026-10-13T05:07:02Z"
+      }
+    },
+    "gate_rework": {
+      "spec": 0,
+      "plan": 0,
+      "deliver": 0
+    },
+    "reviews": {
+      "total": 2,
+      "first_pass": 2
+    },
+    "retries": 0,
+    "interventions": 0
+  },
+  "living": []
+}

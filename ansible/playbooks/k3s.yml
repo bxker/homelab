@@ -27,6 +27,79 @@
         quiet: true
       when: k3s_binary.stat.exists
 
+# Longhorn's DaemonSets run on every node, including the (untainted) control
+# plane, so every node needs its prerequisites.
+- name: Install Longhorn prerequisites
+  hosts: k3s_cp:k3s_workers
+  become: true
+
+  tasks:
+    - name: Install iSCSI and NFS clients
+      ansible.builtin.apt:
+        name: [open-iscsi, nfs-common]
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Load iscsi_tcp at boot
+      ansible.builtin.copy:
+        dest: /etc/modules-load.d/iscsi_tcp.conf
+        content: "iscsi_tcp\n"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Check whether iscsi_tcp is loaded
+      ansible.builtin.stat:
+        path: /sys/module/iscsi_tcp
+      register: iscsi_tcp_module
+
+    - name: Load iscsi_tcp now
+      ansible.builtin.command: modprobe iscsi_tcp
+      changed_when: true
+      when: not iscsi_tcp_module.stat.exists
+
+    - name: Enable iscsid
+      ansible.builtin.systemd:
+        name: iscsid
+        state: started
+        enabled: true
+
+    - name: Gather installed packages
+      ansible.builtin.package_facts:
+
+    # Ubuntu's multipathd can claim the iSCSI disks Longhorn attaches and break
+    # mounts (Longhorn KB "troubleshooting volume with multipath").
+    - name: Create multipath drop-in directory
+      ansible.builtin.file:
+        path: /etc/multipath/conf.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      when: "'multipath-tools' in ansible_facts.packages"
+
+    - name: Keep multipathd off Longhorn's disks
+      ansible.builtin.copy:
+        dest: /etc/multipath/conf.d/longhorn.conf
+        content: |
+          # Managed by Ansible (ansible/playbooks/k3s.yml). Longhorn attaches volumes
+          # as /dev/sd* iSCSI disks; these VMs have single-path disks only.
+          blacklist {
+              devnode "^sd[a-z0-9]+"
+          }
+        owner: root
+        group: root
+        mode: "0644"
+      when: "'multipath-tools' in ansible_facts.packages"
+      notify: Restart multipathd
+
+  handlers:
+    - name: Restart multipathd
+      ansible.builtin.systemd:
+        name: multipathd
+        state: restarted
+
 - name: Install k3s control plane
   hosts: k3s_cp
   become: true
@@ -158,18 +231,6 @@
           nameserver 8.8.8.8
         dest: /etc/resolv.conf
         mode: "0644"
-
-    - name: Install Longhorn prerequisites
-      ansible.builtin.apt:
-        name: [open-iscsi, nfs-common]
-        state: present
-        update_cache: true
-
-    - name: Enable iscsid
-      ansible.builtin.systemd:
-        name: iscsid
-        state: started
-        enabled: true
 
     - name: Create k3s config directory
       ansible.builtin.file:

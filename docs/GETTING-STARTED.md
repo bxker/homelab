@@ -191,6 +191,20 @@ To protect another UI, add its namespace to `kubernetes/apps/infrastructure/ingr
 and annotate its Ingress with
 `traefik.ingress.kubernetes.io/router.middlewares: <namespace>-basic-auth@kubernetescrd`.
 
+### Check that Longhorn can use every node
+
+`mise run k3s-install` installs Longhorn's prerequisites (iSCSI and NFS clients, `iscsid`,
+`iscsi_tcp`) on all three nodes, control plane included, and stops `multipathd` from claiming
+Longhorn's disks. Confirm Longhorn agrees:
+
+```bash
+kubectl -n longhorn-system get pods -o wide | grep longhorn-manager   # one Running per node, no restarts
+kubectl -n longhorn-system get nodes.longhorn.io                      # READY True, SCHEDULABLE True for each
+```
+
+The Longhorn UI's Node page shows the same. For a full check, run Longhorn's `longhornctl check preflight`.
+If a volume was already stuck because multipathd claimed its disk, reboot that node once.
+
 ### Rotate the Grafana admin password
 
 Grafana copies the admin password into its database the first time it starts. After
