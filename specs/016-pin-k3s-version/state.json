@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "ticket": {
+    "source": "github",
+    "ref": "gh:16",
+    "id": "16",
+    "title": "[P0] Pin k3s version and stop passing the join token on the command line",
+    "url": "https://github.com/bxker/homelab/issues/16",
+    "pr": "https://github.com/bxker/homelab/pull/47"
+  },
+  "slug": "016-pin-k3s-version",
+  "branch": "016-pin-k3s-version",
+  "base": "main",
+  "size": "standard",
+  "mode": "fallback",
+  "delivery": "normal",
+  "stage": "done",
+  "gates": {
+    "spec": "approved",
+    "plan": "approved",
+    "deliver": "approved"
+  },
+  "domains": [
+    "scripting"
+  ],
+  "targets": {},
+  "commands": {
+    "test": null,
+    "lint": null,
+    "build": null,
+    "validate": [
+      "uvx --from ansible-core ansible-playbook --syntax-check -i ansible/inventory.yml ansible/playbooks/k3s.yml",
+      "uvx ansible-lint ansible/playbooks/k3s.yml",
+      "python3 -I specs/016-pin-k3s-version/check_k3s.py ."
+    ],
+    "plan": null,
+    "baseline_failures": []
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Pin, version check, token via config.yaml",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "ansible/inventory.yml",
+        "ansible/playbooks/k3s.yml"
+      ],
+      "criteria": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4",
+        "AC6"
+      ],
+      "review": "each",
+      "red": "assertion",
+      "commit": "14ae057"
+    },
+    {
+      "id": "T2",
+      "title": "Renovate tracks k3s_version; doc note",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "renovate.json",
+        "CLAUDE.md"
+      ],
+      "criteria": [
+        "AC5"
+      ],
+      "review": "batch",
+      "commit": "2f03370"
+    }
+  ],
+  "blocked": null,
+  "metrics": {
+    "started_at": "2026-10-13T03:46:33Z",
+    "stage_started_at": {
+      "intake": "2026-10-13T03:46:33Z",
+      "spec": "2026-10-13T03:48:00Z",
+      "plan": "2026-10-13T03:49:56Z",
+      "implement": "2026-10-13T03:50:33Z",
+      "verify": "2026-10-13T03:53:41Z",
+      "document": "2026-10-13T03:54:16Z",
+      "deliver": "2026-10-13T03:54:16Z",
+      "done": "2026-10-13T03:56:32Z"
+    },
+    "gates": {
+      "spec": {
+        "presented_at": "2026-10-13T03:47:13Z",
+        "approved_at": "2026-10-13T03:49:56Z"
+      },
+      "plan": {
+        "presented_at": "2026-10-13T03:49:56Z",
+        "approved_at": "2026-10-13T03:50:33Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T03:54:16Z",
+        "approved_at": "2026-10-13T03:56:32Z"
+      }
+    },
+    "gate_rework": {
+      "spec": 1,
+      "plan": 0,
+      "deliver": 0
+    },
+    "reviews": {
+      "total": 2,
+      "first_pass": 2
+    },
+    "retries": 0,
+    "interventions": 1
+  },
+  "living": []
+}

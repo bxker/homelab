@@ -12,6 +12,22 @@
       "matchUpdateTypes": ["major"],
       "enabled": true,
       "labels": ["major-update"]
+    },
+    {
+      "matchDepNames": ["k3s-io/k3s"],
+      "labels": ["k3s-upgrade"],
+      "prBodyNotes": ["Merging only changes what new nodes install. Upgrade existing nodes to this version first, or the k3s playbook's version check stops."]
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "k3s version pinned in the Ansible inventory",
+      "managerFilePatterns": ["/^ansible/inventory\\.yml$/"],
+      "matchStrings": ["k3s_version: (?<currentValue>v\\S+)"],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "k3s-io/k3s",
+      "versioningTemplate": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+k3s(?<build>\\d+)$"
     }
   ]
 }
