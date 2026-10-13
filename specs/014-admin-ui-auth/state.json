@@ -6,7 +6,7 @@
     "id": "14",
     "title": "[P0] Put authentication in front of Longhorn UI, Traefik dashboard and AdGuard",
     "url": "https://github.com/bxker/homelab/issues/14",
-    "pr": null
+    "pr": "https://github.com/bxker/homelab/pull/46"
   },
   "slug": "014-admin-ui-auth",
   "branch": "014-admin-ui-auth",
@@ -14,11 +14,11 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "deliver",
+  "stage": "done",
   "gates": {
     "spec": "approved",
     "plan": "approved",
-    "deliver": "pending"
+    "deliver": "approved"
   },
   "domains": [
     "kubernetes",
@@ -120,7 +120,8 @@
       "implement": "2026-10-13T03:37:52Z",
       "verify": "2026-10-13T03:39:42Z",
       "document": "2026-10-13T03:40:10Z",
-      "deliver": "2026-10-13T03:40:10Z"
+      "deliver": "2026-10-13T03:40:10Z",
+      "done": "2026-10-13T03:41:07Z"
     },
     "gates": {
       "spec": {
@@ -132,7 +133,8 @@
         "approved_at": "2026-10-13T03:37:52Z"
       },
       "deliver": {
-        "presented_at": "2026-10-13T03:40:10Z"
+        "presented_at": "2026-10-13T03:40:10Z",
+        "approved_at": "2026-10-13T03:41:07Z"
       }
     },
     "gate_rework": {
