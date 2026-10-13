@@ -14,10 +14,10 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "plan",
+  "stage": "implement",
   "gates": {
     "spec": "approved",
-    "plan": "pending",
+    "plan": "approved",
     "deliver": "pending"
   },
   "domains": [
@@ -36,14 +36,62 @@
     "plan": null,
     "baseline_failures": []
   },
-  "tasks": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Split MetalLB pool",
+      "agent": "implementer",
+      "status": "in_progress",
+      "attempts": 1,
+      "files": [
+        "kubernetes/apps/infrastructure/metallb/templates/pool.yaml"
+      ],
+      "criteria": [
+        "AC5"
+      ],
+      "review": "each"
+    },
+    {
+      "id": "T2",
+      "title": "Pin Traefik and AdGuard Services",
+      "agent": "implementer",
+      "status": "todo",
+      "attempts": 0,
+      "files": [
+        "kubernetes/apps/infrastructure/traefik/values.yaml",
+        "kubernetes/apps/infrastructure/adguard-home/templates/service.yaml",
+        "kubernetes/apps/infrastructure/adguard-home/values.yaml"
+      ],
+      "criteria": [
+        "AC1",
+        "AC2",
+        "AC3"
+      ],
+      "review": "each"
+    },
+    {
+      "id": "T3",
+      "title": "IP plan in docs",
+      "agent": "implementer",
+      "status": "todo",
+      "attempts": 0,
+      "files": [
+        "docs/GETTING-STARTED.md"
+      ],
+      "criteria": [
+        "AC4"
+      ],
+      "review": "batch"
+    }
+  ],
   "blocked": null,
   "metrics": {
     "started_at": "2026-10-13T03:19:12Z",
     "stage_started_at": {
       "intake": "2026-10-13T03:19:12Z",
       "spec": "2026-10-13T03:20:00Z",
-      "plan": "2026-10-13T03:21:15Z"
+      "plan": "2026-10-13T03:21:15Z",
+      "implement": "2026-10-13T03:23:48Z"
     },
     "gates": {
       "spec": {
@@ -51,7 +99,8 @@
         "approved_at": "2026-10-13T03:21:15Z"
       },
       "plan": {
-        "presented_at": "2026-10-13T03:22:04Z"
+        "presented_at": "2026-10-13T03:22:04Z",
+        "approved_at": "2026-10-13T03:23:48Z"
       }
     },
     "gate_rework": {

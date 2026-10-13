@@ -26,3 +26,30 @@
 **Open issues:** Router DHCP DNS → .201 is an owner step
 
 **Next:** Plan gate
+
+## implementer · T1 · done
+2026-10-13T03:24:09Z
+
+**Did:** Split MetalLB into `homelab-static` (.200–.209, autoAssign false) and `homelab-pool` (.210–.250, same name to avoid prune); L2Advertisement lists both.
+
+**Evidence:**
+- `check_ips.py` baseline → AC5 "one autoAssign:false pool" FAIL; after T1 → all 4 AC5 checks PASS; `helm lint` 0 failed
+
+**Changed files:** `kubernetes/apps/infrastructure/metallb/templates/pool.yaml`
+
+**Open issues:** none
+
+**Next:** review T1
+
+## infra-reviewer · T1 · done
+2026-10-13T03:24:09Z
+
+**Did:** Reviewed pool split (offline only, no cluster diff).
+
+**Findings:**
+- LOW: an unpinned LB Service now holding .200–.209 would move to .210+. Repo defines only Traefik, adguard-home-dns, adguard-home-http as LoadBalancer; all pinned in T2.
+- LOW: apps sync independently, so a brief IP flap is possible before pins land (accepted, documented in plan).
+
+**Open issues:** none
+
+**Next:** commit T1, T2
