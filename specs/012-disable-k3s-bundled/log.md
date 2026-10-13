@@ -45,3 +45,17 @@
 - LOW: if the restart happens but the uninstall wait fails (>5 min), a re-run restarts again (bundled charts still present) and resumes safely; the release-record deletion is idempotent.
 
 **Next:** commit T1, T2
+
+## implementer · T2 · done
+2026-10-13T04:35:09Z
+
+**Did:** GETTING-STARTED migration section + checks; CLAUDE.md note.
+
+**Changed files:** `docs/GETTING-STARTED.md`, `CLAUDE.md`
+
+## code-reviewer · batch (T2) · done
+2026-10-13T04:35:09Z
+
+**Findings:** none.
+
+**Next:** Deliver gate
