@@ -1,6 +1,6 @@
 # Spec: Pin the k3s version and keep the join token off command lines
 
-Ticket: gh:16 · Size: standard · Status: draft
+Ticket: gh:16 · Size: standard · Status: approved
 
 ## Problem
 Every k3s install pulls whatever version `get.k3s.io` serves that day, so a node replaced next month
@@ -28,6 +28,9 @@ list and in Ansible's verbose output. Anyone holding the token can join a node t
 - **AC5**: Given `renovate.json`, then a custom manager matches the `k3s_version` line and looks it up
   against `k3s-io/k3s` GitHub releases (regex checked offline against the inventory line).
 
+- **AC6**: Given a node that already runs k3s at a version other than `k3s_version`, when the playbook
+  runs, then it fails before changing anything on any node and prints the live and pinned versions.
+
 ## Constraints
 - `install.sh` (checked at v1.34.12+k3s1) installs an agent when given the `agent` command, with
   `server`/`token` taken from `config.yaml`, so no `K3S_URL`/`K3S_TOKEN` is needed.
@@ -38,9 +41,8 @@ list and in Ansible's verbose output. Anyone holding the token can join a node t
 None.
 
 ## Open questions
-1. **Which version?** *Pinning anything other than the live version makes a replaced node skew from the
-   others.* Please run `kubectl get nodes` and give the VERSION column (e.g. `v1.33.5+k3s1`). Current
-   newest releases: v1.34.12, v1.35.9, v1.36.5, v1.37.1. Recommended: pin exactly the live version; upgrade later as its own change.
-2. **Ansible validation tooling:** neither `ansible-playbook` nor `ansible-lint` is installed here.
-   Recommended: run them ephemerally with `uvx` (ansible-core + ansible-lint into a throwaway cache, not the
-   repo) for `--syntax-check` and lint. Otherwise evidence is static review plus a script check.
+None. Resolved at the Spec gate:
+1. The live version is unknown: Terraform only creates the VMs, and k3s came from whatever `get.k3s.io`
+   served at install time. Pin `v1.36.5+k3s1` provisionally and add AC6 so a mismatch fails loudly instead
+   of skewing; the owner corrects the pin from the printed live version.
+2. Run `ansible-playbook --syntax-check` and `ansible-lint` ephemerally via `uvx`.

@@ -14,9 +14,9 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "spec",
+  "stage": "plan",
   "gates": {
-    "spec": "pending",
+    "spec": "approved",
     "plan": "pending",
     "deliver": "pending"
   },
@@ -28,30 +28,34 @@
     "test": null,
     "lint": null,
     "build": null,
-    "validate": [],
+    "validate": [
+      "uvx --from ansible-core ansible-playbook --syntax-check -i ansible/inventory.yml ansible/playbooks/k3s.yml",
+      "uvx ansible-lint ansible/playbooks/k3s.yml",
+      "python3 -I specs/016-pin-k3s-version/check_k3s.py ."
+    ],
     "plan": null,
     "baseline_failures": []
   },
   "tasks": [],
-  "blocked": {
-    "reason": "Spec gate: waiting for the owner's live k3s version (OQ1); OQ2 answered: uvx tooling",
-    "stage": "spec",
-    "task": null,
-    "since": "2026-10-13T03:47:41Z"
-  },
+  "blocked": null,
   "metrics": {
     "started_at": "2026-10-13T03:46:33Z",
     "stage_started_at": {
       "intake": "2026-10-13T03:46:33Z",
-      "spec": "2026-10-13T03:48:00Z"
+      "spec": "2026-10-13T03:48:00Z",
+      "plan": "2026-10-13T03:49:56Z"
     },
     "gates": {
       "spec": {
-        "presented_at": "2026-10-13T03:47:13Z"
+        "presented_at": "2026-10-13T03:47:13Z",
+        "approved_at": "2026-10-13T03:49:56Z"
+      },
+      "plan": {
+        "presented_at": "2026-10-13T03:49:56Z"
       }
     },
     "gate_rework": {
-      "spec": 0,
+      "spec": 1,
       "plan": 0,
       "deliver": 0
     },

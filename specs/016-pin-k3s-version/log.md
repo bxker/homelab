@@ -12,3 +12,23 @@
 **Open issues:** OQ1 live version (owner), OQ2 tooling
 
 **Next:** Spec gate
+
+## analyst · spec (rev 1) · done
+2026-10-13T03:49:56Z
+
+**Did:** OQ1 resolved: live version unknown (Terraform has no k3s info), so pin v1.36.5+k3s1 provisionally and added AC6 (fail loudly on mismatch).
+
+**Changed files:** `specs/016-pin-k3s-version/spec.md`
+
+**Next:** plan
+
+## architect · plan · done
+2026-10-13T03:49:56Z
+
+**Did:** Wrote plan.md: 2 tasks (playbook+inventory; renovate+doc).
+
+**Changed files:** `specs/016-pin-k3s-version/plan.md`
+
+**Open issues:** none
+
+**Next:** Plan gate
