@@ -53,3 +53,24 @@
 - LOW (pre-existing, #32): ClusterSecretStore isn't namespace-scoped.
 
 **Next:** commit T1, T2
+
+## implementer · T2 · done
+2026-10-13T03:38:38Z
+
+**Did:** Longhorn Ingress annotated with `longhorn-system-basic-auth@kubernetescrd`; Traefik dashboard IngressRoute gets `middlewares: [{name: basic-auth}]`.
+
+**Evidence:**
+- `check_auth.py` AC1 ×2 PASS; `helm lint` 0 failed ×2; rendered diff = 3 added lines
+
+**Changed files:** `longhorn/values.yaml`, `traefik/values.yaml`
+
+**Open issues:** none
+
+**Next:** review T2
+
+## infra-reviewer + security-reviewer · T2 · done
+2026-10-13T03:38:38Z
+
+**Findings:** none. Until `ingress-auth` syncs, both routes are refused (fail closed); Longhorn UI becomes unreachable until `secret/ingress-auth` is written (expected, on the Deliver checklist).
+
+**Next:** commit T2, T3

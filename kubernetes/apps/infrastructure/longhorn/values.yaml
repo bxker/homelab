@@ -18,3 +18,5 @@ longhorn:
     tlsSecret: longhorn-tls
     annotations:
       cert-manager.io/cluster-issuer: homelab-ca
+      # Login from the ingress-auth app (the UI can delete volumes)
+      traefik.ingress.kubernetes.io/router.middlewares: longhorn-system-basic-auth@kubernetescrd
