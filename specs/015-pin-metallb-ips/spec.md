@@ -1,6 +1,6 @@
 # Spec: Pin MetalLB IPs for Traefik and AdGuard
 
-Ticket: gh:15 · Size: standard · Status: draft
+Ticket: gh:15 · Size: standard · Status: approved
 
 ## Problem
 Traefik's and AdGuard DNS's LoadBalancer IPs are whatever MetalLB hands out first, but
@@ -18,15 +18,15 @@ shows Traefik on `.201` while the rewrite targets `.200`.
 
 ## Acceptance criteria
 - **AC1**: Given the rendered `traefik` chart, then its LoadBalancer Service carries
-  `metallb.io/loadBalancerIPs: <TRAEFIK_IP>`.
+  `metallb.io/loadBalancerIPs: 192.168.1.200`.
 - **AC2**: Given the rendered `adguard-home` chart, then `adguard-home-dns` carries
-  `metallb.io/loadBalancerIPs: <DNS_IP>` and `adguard-home-http` carries `<UI_IP>`; no
+  `metallb.io/loadBalancerIPs: 192.168.1.201` and `adguard-home-http` carries `192.168.1.203`; no
   `metallb.universe.tf/` annotation remains in the repo.
 - **AC3**: Given the rendered `adguard-home` ConfigMap, then the `*.homelab.local` rewrite answer equals
-  `<TRAEFIK_IP>`, and an offline check fails if the Traefik and AdGuard values disagree.
+  `192.168.1.200`, and an offline check fails if the Traefik and AdGuard values disagree.
 - **AC4**: Given `docs/GETTING-STARTED.md`, then an IP plan lists every pinned LB IP, the `/etc/hosts`
-  example uses `<TRAEFIK_IP>`, and it says the router's DHCP DNS should be `<DNS_IP>`.
-- **AC5** (if OQ2 = yes): pinned IPs come from a pool with `autoAssign: false`; other LB Services get
+  example uses `192.168.1.200`, and it says the router's DHCP DNS should be `192.168.1.201`.
+- **AC5**: pinned IPs come from a pool with `autoAssign: false`; other LB Services get
   IPs only from a separate dynamic pool, and every pinned IP falls inside the static pool.
 
 ## Constraints
@@ -38,14 +38,8 @@ shows Traefik on `.201` while the rewrite targets `.200`.
 None.
 
 ## Open questions
-1. **Which IPs?** *Pinning anything other than the live IPs moves Services; if AdGuard DNS moves,
-   every LAN client loses DNS until the router's DHCP is updated.* Please run
-   `kubectl get svc -A --field-selector spec.type=LoadBalancer` and say which IPs Traefik and
-   `adguard-home-dns` have now, and what DNS IP the router hands out. Recommended: pin to the live IPs.
-   Alternative: the ticket's `.200`/`.201`, accepting a move and a router change.
-2. **Split the pool?** Recommended: yes, `static` 200–209 (`autoAssign: false`) + `dynamic` 210–250,
-   *so a future LB Service can't take a pinned IP before its owner exists on a fresh bootstrap*.
-   Safe only if no other LB Service currently holds an IP in 200–209 (the same `kubectl` output shows this).
-3. **Single source for the Traefik IP:** separate releases can't share values. Recommended: keep the IP
-   in both values files, each with a comment pointing at the other, plus an offline check (AC3) run in
-   verify and later in CI (#28).
+None. Resolved at the Spec gate:
+1. Pin Traefik `.200`, AdGuard DNS `.201`, AdGuard UI `.203` (ticket's values); the owner accepts that Services
+   may move and will point the router's DHCP DNS at `.201`.
+2. Split the pool: `static` 200–209 (`autoAssign: false`) + dynamic 210–250.
+3. Default: IP kept in both values files with cross-reference comments + offline consistency check.
