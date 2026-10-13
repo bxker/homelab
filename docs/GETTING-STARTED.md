@@ -135,7 +135,9 @@ mise run argocd-ui
 # Traefik is pinned to 192.168.1.200 (see IP Address Plan)
 kubectl get svc -n traefik
 # Point your router's DHCP DNS at AdGuard (192.168.1.201) so *.homelab.local
-# resolves everywhere, or add entries to /etc/hosts:
+# resolves everywhere, and add a SECONDARY DNS outside the cluster (the router
+# itself or 1.1.1.1) so the LAN still resolves while the cluster is down.
+# (*.homelab.local only resolves through AdGuard.) Or add entries to /etc/hosts:
 #   192.168.1.200  grafana.homelab.local
 #   192.168.1.200  files.homelab.local
 #   192.168.1.200  longhorn.homelab.local
@@ -253,7 +255,7 @@ is still attached to the old pod on another node. Delete the old pod to let it m
 | 192.168.1.102   | k3s-worker-2             |
 | .200–.209       | MetalLB `homelab-static`: pinned only, never auto-assigned |
 | 192.168.1.200   | Traefik (all `*.homelab.local` Ingresses) |
-| 192.168.1.201   | AdGuard Home DNS: set as the router's DHCP DNS server |
+| 192.168.1.201   | AdGuard Home DNS (2 replicas): set as the router's DHCP DNS server, with a secondary outside the cluster |
 | .210–.250       | MetalLB `homelab-pool`: any other LoadBalancer |
 
 To pin another Service, pick a free IP in .200–.209, add the annotation
