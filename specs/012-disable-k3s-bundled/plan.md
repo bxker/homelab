@@ -1,6 +1,6 @@
 # Plan: Turn off k3s's bundled Traefik and ServiceLB without losing Traefik CRDs
 
-Spec: [spec.md](spec.md) · Status: draft
+Spec: [spec.md](spec.md) · Status: approved
 
 ## Callouts
 - **New dependencies:** none

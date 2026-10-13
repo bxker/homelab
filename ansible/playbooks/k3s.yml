@@ -30,6 +30,10 @@
 - name: Install k3s control plane
   hosts: k3s_cp
   become: true
+  vars:
+    k3s_bin: /usr/local/bin/k3s
+    k3s_servicelb_finalizer: service.kubernetes.io/load-balancer-cleanup
+    k3s_ingressclass_wait_retries: 30
 
   tasks:
     - name: Wait for SSH to be available
@@ -54,6 +58,9 @@
           nameserver 8.8.8.8
         dest: /etc/resolv.conf
         mode: "0644"
+
+    - name: Disable bundled Traefik and ServiceLB
+      ansible.builtin.include_tasks: tasks/k3s-disable-bundled.yml
 
     - name: Download k3s install script for k3s_version
       ansible.builtin.get_url:

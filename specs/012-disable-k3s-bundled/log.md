@@ -22,3 +22,26 @@
 **Changed files:** `specs/012-disable-k3s-bundled/plan.md`
 
 **Next:** Plan gate
+
+## implementer · T1 · done
+2026-10-13T04:34:16Z
+
+**Did:** `tasks/k3s-disable-bundled.yml` (detect bundled charts → drop traefik-crd release record → write config → restart → readyz → strip ServiceLB finalizer → wait for charts gone → bounded IngressClass wait + warning), included in the server play with `k3s_bin`, finalizer and retry vars.
+
+**Evidence:**
+- lab runs 1–3 (see `lab/README.md`): migration keeps CRDs/CRs, removes bundled charts and svclb; re-run changed=0; fresh node writes config only
+- `ansible-playbook --syntax-check` ok; `ansible-lint` production profile (first attempt hit no-handler ×4 → explicit `k3s_needs_restart` fact)
+
+**Changed files:** `ansible/playbooks/tasks/k3s-disable-bundled.yml`, `ansible/playbooks/k3s.yml`
+
+**Next:** review T1
+
+## infra-reviewer · T1 · done
+2026-10-13T04:34:16Z
+
+**Findings:**
+- MEDIUM (owner action, documented): the migration deletes the shared `traefik` IngressClass; Ingresses aren't routed until ArgoCD recreates it. The playbook waits up to 5 min and warns.
+- LOW: the finalizer patch replaces the list without the ServiceLB entry. Other finalizers on the same Service are kept (merge patch with the filtered list).
+- LOW: if the restart happens but the uninstall wait fails (>5 min), a re-run restarts again (bundled charts still present) and resumes safely; the release-record deletion is idempotent.
+
+**Next:** commit T1, T2

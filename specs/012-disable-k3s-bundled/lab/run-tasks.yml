@@ -1,0 +1,11 @@
+- name: Lab run of k3s-disable-bundled.yml
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    k3s_bin: /usr/local/bin/k3s
+    k3s_servicelb_finalizer: service.kubernetes.io/load-balancer-cleanup
+    k3s_ingressclass_wait_retries: 2
+  tasks:
+    - name: Disable bundled Traefik and ServiceLB
+      ansible.builtin.include_tasks: ansible/playbooks/tasks/k3s-disable-bundled.yml

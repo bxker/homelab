@@ -15,3 +15,15 @@ Before: 25 `traefik.io` CRDs, HelmCharts `traefik` + `traefik-crd`, IngressClass
 
 Cause of the hang: ServiceLB's `service.kubernetes.io/load-balancer-cleanup` finalizer on every
 LoadBalancer Service is never removed once ServiceLB is disabled.
+
+## Playbook runs (the real `ansible/playbooks/tasks/k3s-disable-bundled.yml`)
+
+From the pre-disable snapshot, with `/usr/local/bin/k3s` → the lab binary and a `systemctl` stub whose
+`restart k3s` restarts the lab process (which then reads the written `/etc/rancher/k3s/config.yaml`).
+Wrapper: `run-tasks.yml` (`k3s_ingressclass_wait_retries: 2`, since the lab has no ArgoCD).
+
+| Run | Recap | Cluster after |
+|---|---|---|
+| 1 migrate | ok=14 changed=4 failed=0; 1 `systemctl restart k3s`; finalizer removed from `default/sim-lb`, `kube-system/traefik` | CRDs 25, Middleware 1, IngressRoute 1, HelmCharts 0, svclb 0, k3s traefik Deployment 0, no LB finalizers; IngressClass warning shown |
+| 2 re-run | ok=6 changed=0, 0 `systemctl` calls | unchanged |
+| 3 fresh node (`k3s_bin` missing, no config) | ok=5 changed=1 (config only), 0 `systemctl` calls | `config.yaml` identical to run 1's, root 0600 |
