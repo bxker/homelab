@@ -1,6 +1,6 @@
 # Plan: Source the Grafana admin password from OpenBao
 
-Spec: [spec.md](spec.md) · Status: draft
+Spec: [spec.md](spec.md) · Status: approved
 
 ## Callouts
 - **New dependencies:** none

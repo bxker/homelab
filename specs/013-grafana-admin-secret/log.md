@@ -26,3 +26,44 @@
 **Open issues:** Deliver order: owner must write `secret/grafana` before merge.
 
 **Next:** Plan gate
+
+## implementer · T1 · done
+2026-10-13T02:31:00Z
+
+**Did:** Added ExternalSecret `grafana-admin` (from `secret/grafana`), set `grafana.admin.existingSecret`, removed the literal password, moved prometheus-stack to sync wave 6.
+
+**Evidence:**
+- `check_render.py` on baseline render → 10 FAIL (red: assertion); after → RESULT: PASS (11/11)
+- `helm lint` → 0 failed; rendered kinds diff: +ExternalSecret grafana-admin, −Secret prometheus-stack-grafana
+
+**Changed files:** `.../prometheus-stack/templates/grafana-admin-secret.yaml`, `.../values.yaml`, `.../application.yaml`
+
+**Open issues:** none
+
+**Next:** review T1
+
+## infra-reviewer · T1 · done
+2026-10-13T02:33:00Z
+
+**Did:** Reviewed T1 diff and before/after renders (offline only, no cluster diff).
+
+**Findings:**
+- MEDIUM values.yaml (grafana): checksum change forces a rollout; strategy RollingUpdate + RWO Longhorn PVC → new pod on another node hangs on Multi-Attach, old pod keeps serving → document "delete the old pod" in the runbook (T2); `Recreate` rejected: it turns a missing OpenBao key into an outage.
+- LOW: ArgoCD prunes `monitoring/prometheus-stack-grafana` (expected, no data).
+
+**Open issues:** none
+
+**Next:** security review
+
+## security-reviewer · T1 · done
+2026-10-13T02:34:00Z
+
+**Did:** Checked secrets handling in the diff.
+
+**Findings:**
+- LOW (pre-existing, #32): ClusterSecretStore `openbao` has no namespace conditions; any namespace could also read `secret/grafana`.
+- No secret values in repo; the old placeholder is in Git history, so rotation (runbook) is required, history rewrite is not.
+
+**Open issues:** none
+
+**Next:** commit T1, T2

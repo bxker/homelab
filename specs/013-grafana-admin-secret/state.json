@@ -14,10 +14,10 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "plan",
+  "stage": "implement",
   "gates": {
     "spec": "approved",
-    "plan": "pending",
+    "plan": "approved",
     "deliver": "pending"
   },
   "domains": [
@@ -36,14 +36,52 @@
     "plan": null,
     "baseline_failures": []
   },
-  "tasks": [],
+  "tasks": [
+    {
+      "agent": "implementer",
+      "attempts": 1,
+      "review": "each",
+      "id": "T1",
+      "title": "ExternalSecret + values + sync wave",
+      "status": "in_progress",
+      "files": [
+        "kubernetes/apps/infrastructure/prometheus-stack/templates/grafana-admin-secret.yaml",
+        "kubernetes/apps/infrastructure/prometheus-stack/values.yaml",
+        "kubernetes/apps/infrastructure/prometheus-stack/application.yaml"
+      ],
+      "criteria": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4"
+      ],
+      "red": "assertion"
+    },
+    {
+      "agent": "implementer",
+      "attempts": 0,
+      "review": "batch",
+      "id": "T2",
+      "title": "Docs, vault-write hint, rotation runbook",
+      "status": "todo",
+      "files": [
+        "docs/GETTING-STARTED.md",
+        "mise.toml",
+        "CLAUDE.md"
+      ],
+      "criteria": [
+        "AC5"
+      ]
+    }
+  ],
   "blocked": null,
   "metrics": {
     "started_at": "2026-10-13T02:06:46Z",
     "stage_started_at": {
       "intake": "2026-10-13T02:06:46Z",
       "spec": "2026-10-13T02:06:50Z",
-      "plan": "2026-10-13T02:10:00Z"
+      "plan": "2026-10-13T02:10:00Z",
+      "implement": "2026-10-13T02:25:00Z"
     },
     "gates": {
       "spec": {
@@ -51,7 +89,8 @@
         "approved_at": "2026-10-13T02:10:00Z"
       },
       "plan": {
-        "presented_at": "2026-10-13T02:20:30Z"
+        "presented_at": "2026-10-13T02:20:30Z",
+        "approved_at": "2026-10-13T02:25:00Z"
       }
     },
     "gate_rework": {
@@ -60,8 +99,8 @@
       "deliver": 0
     },
     "reviews": {
-      "total": 0,
-      "first_pass": 0
+      "total": 2,
+      "first_pass": 2
     },
     "retries": 0,
     "interventions": 0

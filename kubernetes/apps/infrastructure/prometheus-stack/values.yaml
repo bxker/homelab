@@ -1,6 +1,10 @@
 kube-prometheus-stack:
   grafana:
-    adminPassword: "CHANGE_ME_BEFORE_DEPLOY"  # TODO: use sealed-secrets or SOPS
+    # Admin login comes from OpenBao via templates/grafana-admin-secret.yaml
+    admin:
+      existingSecret: grafana-admin
+      userKey: admin-user
+      passwordKey: admin-password
     ingress:
       enabled: true
       ingressClassName: traefik
