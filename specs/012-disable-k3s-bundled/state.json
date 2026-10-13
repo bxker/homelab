@@ -6,7 +6,7 @@
     "id": "12",
     "title": "[P0] Disable k3s bundled Traefik and ServiceLB (conflict with ArgoCD Traefik + MetalLB)",
     "url": "https://github.com/bxker/homelab/issues/12",
-    "pr": null
+    "pr": "https://github.com/bxker/homelab/pull/49"
   },
   "slug": "012-disable-k3s-bundled",
   "branch": "012-disable-k3s-bundled",
@@ -14,11 +14,11 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "deliver",
+  "stage": "done",
   "gates": {
     "spec": "approved",
     "plan": "approved",
-    "deliver": "pending"
+    "deliver": "approved"
   },
   "domains": [
     "scripting",
@@ -86,7 +86,8 @@
       "implement": "2026-10-13T04:30:46Z",
       "verify": "2026-10-13T04:34:43Z",
       "document": "2026-10-13T04:35:09Z",
-      "deliver": "2026-10-13T04:35:09Z"
+      "deliver": "2026-10-13T04:35:09Z",
+      "done": "2026-10-13T04:36:58Z"
     },
     "gates": {
       "spec": {
@@ -98,7 +99,8 @@
         "approved_at": "2026-10-13T04:30:46Z"
       },
       "deliver": {
-        "presented_at": "2026-10-13T04:35:09Z"
+        "presented_at": "2026-10-13T04:35:09Z",
+        "approved_at": "2026-10-13T04:36:58Z"
       }
     },
     "gate_rework": {
