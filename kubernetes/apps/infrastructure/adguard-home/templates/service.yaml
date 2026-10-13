@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: adguard-home-dns
   annotations:
+    # Fixed so the router's DHCP can hand it out as the LAN DNS server
+    metallb.io/loadBalancerIPs: 192.168.1.201
     tailscale.com/expose: "true"
     tailscale.com/hostname: "homelab-dns"
 spec:
@@ -24,7 +26,7 @@ kind: Service
 metadata:
   name: adguard-home-http
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.1.203
+    metallb.io/loadBalancerIPs: 192.168.1.203
 spec:
   type: LoadBalancer
   selector:

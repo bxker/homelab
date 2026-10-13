@@ -53,3 +53,31 @@
 **Open issues:** none
 
 **Next:** commit T1, T2
+
+## implementer · T2 · done
+2026-10-13T03:24:32Z
+
+**Did:** Pinned Traefik .200, AdGuard DNS .201, UI .203 with `metallb.io/loadBalancerIPs`; cross-reference comments on both sides of the rewrite IP.
+
+**Evidence:**
+- `check_ips.py` → RESULT: PASS (10/10); drifted rewrite (.201) → AC3 FAIL (check catches drift)
+- `helm lint` traefik, adguard → 0 failed; rendered diff = 3 annotation lines only
+
+**Changed files:** `traefik/values.yaml`, `adguard-home/templates/service.yaml`, `adguard-home/values.yaml`
+
+**Open issues:** none
+
+**Next:** review T2
+
+## infra-reviewer · T2 · done
+2026-10-13T03:24:32Z
+
+**Did:** Reviewed T2 diff and renders (offline only).
+
+**Findings:**
+- MEDIUM (owner action): if live IPs differ, Services move on sync; LAN DNS breaks until the router's DHCP DNS is .201 → put it on the Deliver checklist, keep a secondary DNS.
+- No new exposure; AdGuard ConfigMap unchanged (no pod restart).
+
+**Open issues:** none
+
+**Next:** commit T2, T3

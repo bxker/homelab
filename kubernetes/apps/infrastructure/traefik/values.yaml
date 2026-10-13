@@ -5,6 +5,10 @@ traefik:
   service:
     type: LoadBalancer
     annotations:
+      # Fixed IP from MetalLB's homelab-static pool. AdGuard rewrites
+      # *.homelab.local to this IP: keep traefikIP in
+      # adguard-home/values.yaml equal to it.
+      metallb.io/loadBalancerIPs: 192.168.1.200
       tailscale.com/expose: "true"
       tailscale.com/hostname: "homelab-traefik"
 

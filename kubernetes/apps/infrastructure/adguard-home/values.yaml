@@ -1,3 +1,4 @@
 # No upstream chart — all resources are in templates/
-# Traefik MetalLB IP for *.homelab.local DNS rewrites
+# Traefik's IP for the *.homelab.local DNS rewrite. Must equal the
+# metallb.io/loadBalancerIPs pin in traefik/values.yaml.
 traefikIP: "192.168.1.200"
