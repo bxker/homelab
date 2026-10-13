@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "ticket": { "source": "github", "ref": "gh:11", "id": "11", "title": "[P0] `mise run all` destroys every VM and all persistent data", "url": "https://github.com/bxker/homelab/issues/11", "pr": null },
+  "slug": "011-nondestructive-mise-all",
+  "branch": "011-nondestructive-mise-all",
+  "base": "main",
+  "size": "small",
+  "mode": "inline",
+  "delivery": "normal",
+  "stage": "spec",
+  "gates": { "spec": "pending", "plan": "skipped", "deliver": "pending" },
+  "domains": ["scripting"],
+  "targets": {},
+  "commands": { "test": null, "lint": null, "build": null,
+                "validate": ["python3 -c 'import tomllib;tomllib.load(open(\"mise.toml\",\"rb\"))'", "bash -n on each [tasks.*].run script (extracted via tomllib)"],
+                "plan": null, "baseline_failures": [] },
+  "tasks": [],
+  "blocked": null,
+  "metrics": {
+    "started_at": "2026-10-13T00:57:14Z",
+    "stage_started_at": { "intake": "2026-10-13T00:57:14Z", "spec": "2026-10-13T00:57:34Z" },
+    "gates": { "spec": { "presented_at": "2026-10-13T00:58:00Z" } },
+    "gate_rework": { "spec": 0, "plan": 0, "deliver": 0 },
+    "reviews": { "total": 0, "first_pass": 0 },
+    "retries": 0,
+    "interventions": 0
+  }
+}
