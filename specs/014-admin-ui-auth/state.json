@@ -14,7 +14,7 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "implement",
+  "stage": "deliver",
   "gates": {
     "spec": "approved",
     "plan": "approved",
@@ -41,7 +41,7 @@
       "id": "T1",
       "title": "ingress-auth app",
       "agent": "implementer",
-      "status": "in_progress",
+      "status": "done",
       "attempts": 1,
       "files": [
         "kubernetes/apps/infrastructure/ingress-auth/Chart.yaml",
@@ -54,14 +54,15 @@
         "AC4"
       ],
       "review": "each",
-      "red": "assertion"
+      "red": "assertion",
+      "commit": "9173a15"
     },
     {
       "id": "T2",
       "title": "Auth on Longhorn Ingress and dashboard",
       "agent": "implementer",
-      "status": "todo",
-      "attempts": 0,
+      "status": "done",
+      "attempts": 1,
       "files": [
         "kubernetes/apps/infrastructure/longhorn/values.yaml",
         "kubernetes/apps/infrastructure/traefik/values.yaml"
@@ -69,14 +70,16 @@
       "criteria": [
         "AC1"
       ],
-      "review": "each"
+      "review": "each",
+      "commit": "81688c1",
+      "red": "assertion"
     },
     {
       "id": "T3",
       "title": "AdGuard UI behind Traefik",
       "agent": "implementer",
-      "status": "todo",
-      "attempts": 0,
+      "status": "done",
+      "attempts": 1,
       "files": [
         "kubernetes/apps/infrastructure/adguard-home/templates/service.yaml",
         "kubernetes/apps/infrastructure/adguard-home/templates/ingress.yaml"
@@ -84,14 +87,16 @@
       "criteria": [
         "AC2"
       ],
-      "review": "each"
+      "review": "each",
+      "commit": "b107104",
+      "red": "assertion"
     },
     {
       "id": "T4",
       "title": "Docs, IP plan, vault-write hint",
       "agent": "implementer",
-      "status": "todo",
-      "attempts": 0,
+      "status": "done",
+      "attempts": 1,
       "files": [
         "docs/GETTING-STARTED.md",
         "CLAUDE.md",
@@ -100,7 +105,9 @@
       "criteria": [
         "AC5"
       ],
-      "review": "batch"
+      "review": "batch",
+      "commit": "caf7b8d",
+      "red": "assertion"
     }
   ],
   "blocked": null,
@@ -110,7 +117,10 @@
       "intake": "2026-10-13T03:34:16Z",
       "spec": "2026-10-13T03:36:00Z",
       "plan": "2026-10-13T03:36:49Z",
-      "implement": "2026-10-13T03:37:52Z"
+      "implement": "2026-10-13T03:37:52Z",
+      "verify": "2026-10-13T03:39:42Z",
+      "document": "2026-10-13T03:40:10Z",
+      "deliver": "2026-10-13T03:40:10Z"
     },
     "gates": {
       "spec": {
@@ -120,6 +130,9 @@
       "plan": {
         "presented_at": "2026-10-13T03:37:15Z",
         "approved_at": "2026-10-13T03:37:52Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T03:40:10Z"
       }
     },
     "gate_rework": {
@@ -128,10 +141,11 @@
       "deliver": 0
     },
     "reviews": {
-      "total": 0,
-      "first_pass": 0
+      "total": 4,
+      "first_pass": 4
     },
     "retries": 0,
     "interventions": 0
-  }
+  },
+  "living": []
 }

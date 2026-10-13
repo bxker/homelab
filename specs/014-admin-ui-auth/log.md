@@ -99,3 +99,22 @@
 - No new exposure: UI moves from an unauthenticated LB IP to an authenticated Ingress.
 
 **Next:** commit T3, T4
+
+## implementer · T4 · done
+2026-10-13T03:40:10Z
+
+**Did:** Docs: credential step, protected-URL table, dashboard port-forward, protect-another-UI how-to, .203 removed; CLAUDE.md secrets/waves; vault-write hint.
+
+**Evidence:**
+- first attempt's hint used `\$` (invalid TOML escape) → `tomllib` failed; rewritten with single quotes → parses, `sh -n` ok, #11 checks PASS
+
+**Changed files:** `docs/GETTING-STARTED.md`, `CLAUDE.md`, `mise.toml`
+
+**Next:** batched review, verify
+
+## code-reviewer · batch (T4) · done
+2026-10-13T03:40:10Z
+
+**Findings:** none CRITICAL/HIGH. LOW: stale ".203 AdGuard UI" in metallb pool.yaml comment (outside scope) → follow-up / Deliver gate.
+
+**Next:** Deliver gate
