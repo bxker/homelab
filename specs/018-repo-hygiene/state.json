@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "ticket": {
+    "source": "github",
+    "ref": "gh:18",
+    "id": "18",
+    "title": "[P0] Repo hygiene: remove .DS_Store files and fix stale docs",
+    "url": "https://github.com/bxker/homelab/issues/18",
+    "pr": "https://github.com/bxker/homelab/pull/48"
+  },
+  "slug": "018-repo-hygiene",
+  "branch": "018-repo-hygiene",
+  "base": "main",
+  "size": "standard",
+  "mode": "fallback",
+  "delivery": "normal",
+  "stage": "done",
+  "gates": {
+    "spec": "approved",
+    "plan": "approved",
+    "deliver": "approved"
+  },
+  "domains": [
+    "kubernetes",
+    "gitops"
+  ],
+  "targets": {},
+  "commands": {
+    "test": null,
+    "lint": null,
+    "build": null,
+    "validate": [],
+    "plan": null,
+    "baseline_failures": []
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Remove .DS_Store",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        ".gitignore",
+        ".DS_Store",
+        "kubernetes/.DS_Store",
+        "kubernetes/apps/.DS_Store"
+      ],
+      "criteria": [
+        "AC1"
+      ],
+      "review": "batch",
+      "commit": "f8d42c6"
+    },
+    {
+      "id": "T2",
+      "title": "Move Tailscale to infrastructure",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "kubernetes/apps/workloads/tailscale/**",
+        "kubernetes/apps/infrastructure/tailscale/**"
+      ],
+      "criteria": [
+        "AC2",
+        "AC3"
+      ],
+      "review": "each",
+      "commit": "a6da28c"
+    },
+    {
+      "id": "T3",
+      "title": "README, pool comment, gitops task",
+      "agent": "implementer",
+      "status": "done",
+      "attempts": 1,
+      "files": [
+        "README.md",
+        "kubernetes/apps/infrastructure/metallb/templates/pool.yaml",
+        "mise.toml"
+      ],
+      "criteria": [
+        "AC4",
+        "AC5",
+        "AC6"
+      ],
+      "review": "batch",
+      "commit": "901c6f1"
+    }
+  ],
+  "blocked": null,
+  "metrics": {
+    "started_at": "2026-10-13T03:56:34Z",
+    "stage_started_at": {
+      "intake": "2026-10-13T03:56:34Z",
+      "spec": "2026-10-13T03:58:00Z",
+      "plan": "2026-10-13T03:59:39Z",
+      "implement": "2026-10-13T04:00:09Z",
+      "verify": "2026-10-13T04:01:06Z",
+      "document": "2026-10-13T04:01:27Z",
+      "deliver": "2026-10-13T04:01:27Z",
+      "done": "2026-10-13T04:02:14Z"
+    },
+    "gates": {
+      "spec": {
+        "presented_at": "2026-10-13T03:57:14Z",
+        "approved_at": "2026-10-13T03:59:39Z"
+      },
+      "plan": {
+        "presented_at": "2026-10-13T03:59:39Z",
+        "approved_at": "2026-10-13T04:00:09Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T04:01:27Z",
+        "approved_at": "2026-10-13T04:02:14Z"
+      }
+    },
+    "gate_rework": {
+      "spec": 0,
+      "plan": 0,
+      "deliver": 0
+    },
+    "reviews": {
+      "total": 2,
+      "first_pass": 2
+    },
+    "retries": 0,
+    "interventions": 0
+  },
+  "living": []
+}

@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/bxker/homelab.git
     targetRevision: main
-    path: kubernetes/apps/workloads/tailscale
+    path: kubernetes/apps/infrastructure/tailscale
   destination:
     server: https://kubernetes.default.svc
     namespace: tailscale

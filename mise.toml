@@ -122,6 +122,8 @@ kubectl wait --for=condition=available deployment/argocd-server \
 
 echo "Deploying app-of-apps..."
 kubectl apply -f kubernetes/apps/app-of-apps.yaml
+# Served once Traefik and cert-manager sync; an Ingress can exist before them
+kubectl apply -f kubernetes/bootstrap/argocd-ingress.yaml
 
 echo ""
 echo "ArgoCD is running. Apps will sync automatically."
