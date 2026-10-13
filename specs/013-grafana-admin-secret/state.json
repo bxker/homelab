@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "ticket": {
+    "source": "github",
+    "ref": "gh:13",
+    "id": "13",
+    "title": "[P0] Rotate Grafana admin password and source it from OpenBao via ESO",
+    "url": "https://github.com/bxker/homelab/issues/13",
+    "pr": "https://github.com/bxker/homelab/pull/44"
+  },
+  "slug": "013-grafana-admin-secret",
+  "branch": "013-grafana-admin-secret",
+  "base": "main",
+  "size": "standard",
+  "mode": "fallback",
+  "delivery": "normal",
+  "stage": "done",
+  "gates": {
+    "spec": "approved",
+    "plan": "approved",
+    "deliver": "approved"
+  },
+  "domains": [
+    "kubernetes",
+    "gitops"
+  ],
+  "targets": {},
+  "commands": {
+    "test": null,
+    "lint": null,
+    "build": null,
+    "validate": [
+      "scratchpad render.sh (helm v3.16.4 + vendored kube-prometheus-stack 65.8.1) \u2192 helm template + helm lint",
+      "grep -rniE 'change_?me' kubernetes/"
+    ],
+    "plan": null,
+    "baseline_failures": []
+  },
+  "tasks": [
+    {
+      "agent": "implementer",
+      "attempts": 1,
+      "review": "each",
+      "id": "T1",
+      "title": "ExternalSecret + values + sync wave",
+      "status": "done",
+      "files": [
+        "kubernetes/apps/infrastructure/prometheus-stack/templates/grafana-admin-secret.yaml",
+        "kubernetes/apps/infrastructure/prometheus-stack/values.yaml",
+        "kubernetes/apps/infrastructure/prometheus-stack/application.yaml"
+      ],
+      "criteria": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4"
+      ],
+      "red": "assertion",
+      "commit": "7225f18"
+    },
+    {
+      "agent": "implementer",
+      "attempts": 1,
+      "review": "batch",
+      "id": "T2",
+      "title": "Docs, vault-write hint, rotation runbook",
+      "status": "done",
+      "files": [
+        "docs/GETTING-STARTED.md",
+        "mise.toml",
+        "CLAUDE.md"
+      ],
+      "criteria": [
+        "AC5"
+      ],
+      "commit": "71274a5"
+    }
+  ],
+  "blocked": null,
+  "metrics": {
+    "started_at": "2026-10-13T02:06:46Z",
+    "stage_started_at": {
+      "intake": "2026-10-13T02:06:46Z",
+      "spec": "2026-10-13T02:06:50Z",
+      "plan": "2026-10-13T02:10:00Z",
+      "implement": "2026-10-13T02:25:00Z",
+      "verify": "2026-10-13T02:29:42Z",
+      "document": "2026-10-13T02:30:00Z",
+      "deliver": "2026-10-13T02:31:00Z",
+      "done": "2026-10-13T03:18:55Z"
+    },
+    "gates": {
+      "spec": {
+        "presented_at": "2026-10-13T02:07:30Z",
+        "approved_at": "2026-10-13T02:10:00Z"
+      },
+      "plan": {
+        "presented_at": "2026-10-13T02:20:30Z",
+        "approved_at": "2026-10-13T02:25:00Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T02:31:00Z",
+        "approved_at": "2026-10-13T03:18:55Z"
+      }
+    },
+    "gate_rework": {
+      "spec": 0,
+      "plan": 0,
+      "deliver": 0
+    },
+    "reviews": {
+      "total": 3,
+      "first_pass": 3
+    },
+    "retries": 0,
+    "interventions": 1
+  },
+  "living": []
+}
