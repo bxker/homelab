@@ -20,3 +20,31 @@
 **Changed files:** `specs/018-repo-hygiene/plan.md`
 
 **Next:** Plan gate
+
+## implementer · T1 · done
+2026-10-13T04:00:35Z
+
+**Did:** `git rm --cached` 3 `.DS_Store`; `.DS_Store` in `.gitignore`.
+
+**Evidence:** `git ls-files | grep -c DS_Store` → 0; `git check-ignore kubernetes/.DS_Store` → ignored
+
+**Changed files:** `.gitignore`, 3 removed `.DS_Store`
+
+## implementer · T2 · done
+2026-10-13T04:00:35Z
+
+**Did:** `git mv` Tailscale chart to `infrastructure/`; Application path updated; values comments describe the OpenBao → ESO → `operator-oauth` flow.
+
+**Evidence:**
+- `git diff -M --stat`: Chart.yaml + 3 templates 100% renames (0 lines)
+- parsed values.yaml identical; Application identical except `spec.source.path`, name `tailscale`
+- no `workloads/tailscale` references left outside specs/
+
+**Changed files:** `kubernetes/apps/{workloads → infrastructure}/tailscale/**`
+
+## infra-reviewer · T2 · done
+2026-10-13T04:00:35Z
+
+**Findings:** none. Same Application name → in-place path update; identical render inputs → no resource changes or prune. Tailscale chart repo unreachable here, so evidence is input identity rather than a render.
+
+**Next:** commit T2, T3
