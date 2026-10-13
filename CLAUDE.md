@@ -71,7 +71,7 @@ ArgoCD runs `helm dependency build` automatically. Never commit the `charts/` di
 
 ### Sync Waves
 
-All apps use `argocd.argoproj.io/sync-wave` annotations in `application.yaml` to control ordering. Approximate wave assignments: MetalLB (1) → Traefik / cert-manager / AdGuard Home (2) → Longhorn (3) → OpenBao / Prometheus Stack (4) → External Secrets Operator (5) → Tailscale (6) → Seafile (10).
+All apps use `argocd.argoproj.io/sync-wave` annotations in `application.yaml` to control ordering. Approximate wave assignments: MetalLB (1) → Traefik / cert-manager / AdGuard Home (2) → Longhorn (3) → OpenBao (4) → External Secrets Operator (5) → Prometheus Stack / Tailscale (6) → Seafile (10).
 
 ### Adding a New App
 
@@ -92,10 +92,10 @@ Update `repoURL` in `app-of-apps.yaml` and all `application.yaml` files to your 
 
 ### Secrets
 
-Secrets are kept out of Git via two mechanisms:
+Secrets are kept out of Git:
 - **`.env`** (gitignored) — Proxmox URL, API token, node name. Loaded by mise via `_.file = ".env"`. See `.env.example` for the template.
 - **`terraform.tfvars`** (gitignored) — SSH public key, IPs, storage pool.
-- **Kubernetes values.yaml** — passwords marked `"changeme"` are placeholders. Replace with Sealed Secrets or SOPS before production use.
+- **Kubernetes** — app secrets live in OpenBao (`secret/<app>`) and reach the cluster through an `ExternalSecret` in the app's `templates/` (ClusterSecretStore `openbao`). Current keys: `secret/tailscale`, `secret/seafile`, `secret/grafana`. Never put credentials in `values.yaml`. Grafana's admin password rotation needs an extra step (see `docs/GETTING-STARTED.md`).
 
 ### Ansible Inventory
 

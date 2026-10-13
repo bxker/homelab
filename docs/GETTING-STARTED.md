@@ -142,7 +142,34 @@ export VAULT_TOKEN=<root-token>
 
 # Tailscale OAuth credentials (from Step 7 below)
 bao kv put secret/tailscale client_id=YOUR_ID client_secret=YOUR_SECRET
+
+# Grafana admin login (Grafana waits for this secret before it starts)
+bao kv put secret/grafana admin_user=admin admin_password="$(openssl rand -base64 24)"
 ```
+
+### Rotate the Grafana admin password
+
+Grafana copies the admin password into its database the first time it starts. After
+that, changing `secret/grafana` only updates the Kubernetes Secret, not the login, so
+reset the database to the same value:
+
+```bash
+PW=$(openssl rand -base64 24)
+bao kv put secret/grafana admin_user=admin admin_password="$PW"
+
+# Refresh the Kubernetes Secret now instead of within the hour
+kubectl -n monitoring annotate externalsecret grafana-admin force-sync="$(date +%s)" --overwrite
+
+# Set the database password to match
+printf '%s' "$PW" | kubectl -n monitoring exec -i deploy/prometheus-stack-grafana -c grafana -- \
+  grafana cli admin reset-admin-password --password-from-stdin
+```
+
+Keep `admin_user=admin`: changing it doesn't rename the existing database user.
+
+If a new Grafana pod sits in `ContainerCreating` with a `Multi-Attach` error, its volume
+is still attached to the old pod on another node. Delete the old pod to let it move:
+`kubectl -n monitoring delete pod <old-grafana-pod>`.
 
 > **Note:** OpenBao must be re-unsealed after every pod restart (2 of 3 keys). Run `mise run vault-unseal` when the pod restarts.
 
