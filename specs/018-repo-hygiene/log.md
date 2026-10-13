@@ -48,3 +48,19 @@
 **Findings:** none. Same Application name → in-place path update; identical render inputs → no resource changes or prune. Tailscale chart repo unreachable here, so evidence is input identity rather than a render.
 
 **Next:** commit T2, T3
+
+## implementer · T3 · done
+2026-10-13T04:01:27Z
+
+**Did:** README diagram/tree/Quick Start; pool comment; `gitops` applies argocd-ingress.yaml.
+
+**Evidence:** AC4–AC6 checks pass; diagram rows I edited are 63 wide like the box (odd widths at the top pre-exist on main); mise.toml parses; #11 checks PASS
+
+**Changed files:** `README.md`, `kubernetes/apps/infrastructure/metallb/templates/pool.yaml`, `mise.toml`
+
+## code-reviewer · batch (T1, T3) · done
+2026-10-13T04:01:27Z
+
+**Findings:** none.
+
+**Next:** Deliver gate

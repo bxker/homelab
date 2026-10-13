@@ -14,7 +14,7 @@
   "size": "standard",
   "mode": "fallback",
   "delivery": "normal",
-  "stage": "implement",
+  "stage": "deliver",
   "gates": {
     "spec": "approved",
     "plan": "approved",
@@ -38,7 +38,7 @@
       "id": "T1",
       "title": "Remove .DS_Store",
       "agent": "implementer",
-      "status": "in_progress",
+      "status": "done",
       "attempts": 1,
       "files": [
         ".gitignore",
@@ -49,14 +49,15 @@
       "criteria": [
         "AC1"
       ],
-      "review": "batch"
+      "review": "batch",
+      "commit": "f8d42c6"
     },
     {
       "id": "T2",
       "title": "Move Tailscale to infrastructure",
       "agent": "implementer",
-      "status": "todo",
-      "attempts": 0,
+      "status": "done",
+      "attempts": 1,
       "files": [
         "kubernetes/apps/workloads/tailscale/**",
         "kubernetes/apps/infrastructure/tailscale/**"
@@ -65,14 +66,15 @@
         "AC2",
         "AC3"
       ],
-      "review": "each"
+      "review": "each",
+      "commit": "a6da28c"
     },
     {
       "id": "T3",
       "title": "README, pool comment, gitops task",
       "agent": "implementer",
-      "status": "todo",
-      "attempts": 0,
+      "status": "done",
+      "attempts": 1,
       "files": [
         "README.md",
         "kubernetes/apps/infrastructure/metallb/templates/pool.yaml",
@@ -83,7 +85,8 @@
         "AC5",
         "AC6"
       ],
-      "review": "batch"
+      "review": "batch",
+      "commit": "901c6f1"
     }
   ],
   "blocked": null,
@@ -93,7 +96,10 @@
       "intake": "2026-10-13T03:56:34Z",
       "spec": "2026-10-13T03:58:00Z",
       "plan": "2026-10-13T03:59:39Z",
-      "implement": "2026-10-13T04:00:09Z"
+      "implement": "2026-10-13T04:00:09Z",
+      "verify": "2026-10-13T04:01:06Z",
+      "document": "2026-10-13T04:01:27Z",
+      "deliver": "2026-10-13T04:01:27Z"
     },
     "gates": {
       "spec": {
@@ -103,6 +109,9 @@
       "plan": {
         "presented_at": "2026-10-13T03:59:39Z",
         "approved_at": "2026-10-13T04:00:09Z"
+      },
+      "deliver": {
+        "presented_at": "2026-10-13T04:01:27Z"
       }
     },
     "gate_rework": {
@@ -111,10 +120,11 @@
       "deliver": 0
     },
     "reviews": {
-      "total": 0,
-      "first_pass": 0
+      "total": 2,
+      "first_pass": 2
     },
     "retries": 0,
     "interventions": 0
-  }
+  },
+  "living": []
 }
