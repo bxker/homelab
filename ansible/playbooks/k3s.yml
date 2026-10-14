@@ -171,20 +171,34 @@
         k3s_token: "{{ k3s_node_token.content | b64decode | trim }}"
       no_log: true
 
+    # Private (0700) dir on this machine instead of the shared /tmp: the
+    # kubeconfig holds cluster-admin credentials.
+    - name: Make a private temp dir for the kubeconfig
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: kubeconfig
+      delegate_to: localhost
+      become: false
+      register: kubeconfig_tmp
+
     - name: Fetch kubeconfig
       ansible.builtin.fetch:
         src: /etc/rancher/k3s/k3s.yaml
-        dest: /tmp/k3s-kubeconfig.yaml
+        dest: "{{ kubeconfig_tmp.path }}/k3s.yaml"
         flat: true
 
-- name: Fix kubeconfig server address
+# Writes ~/.kube/homelab.yaml and leaves ~/.kube/config alone. mise.toml points
+# KUBECONFIG at homelab.yaml, so every mise task uses the current cluster.
+- name: Install the homelab kubeconfig
   hosts: localhost
   connection: local
+  vars:
+    kubeconfig_tmp_dir: "{{ hostvars[groups['k3s_cp'][0]]['kubeconfig_tmp']['path'] }}"
 
   tasks:
     - name: Replace localhost with CP IP in kubeconfig
       ansible.builtin.replace:
-        path: /tmp/k3s-kubeconfig.yaml
+        path: "{{ kubeconfig_tmp_dir }}/k3s.yaml"
         regexp: 'https://127\.0\.0\.1:6443'
         replace: "https://{{ hostvars[groups['k3s_cp'][0]]['ansible_host'] }}:6443"
 
@@ -196,9 +210,20 @@
 
     - name: Install kubeconfig
       ansible.builtin.copy:
-        src: /tmp/k3s-kubeconfig.yaml
-        dest: "{{ ansible_env.HOME }}/.kube/config"
+        src: "{{ kubeconfig_tmp_dir }}/k3s.yaml"
+        dest: "{{ ansible_env.HOME }}/.kube/homelab.yaml"
         mode: "0600"
+
+    - name: Remove the temp dir
+      ansible.builtin.file:
+        path: "{{ kubeconfig_tmp_dir }}"
+        state: absent
+
+    - name: Say where the kubeconfig went
+      ansible.builtin.debug:
+        msg: >-
+          Wrote {{ ansible_env.HOME }}/.kube/homelab.yaml. mise tasks use it via KUBECONFIG;
+          outside mise run: export KUBECONFIG=~/.kube/homelab.yaml
 
 - name: Install k3s workers
   hosts: k3s_workers

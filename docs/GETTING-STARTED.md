@@ -97,7 +97,12 @@ everything first (after you type the cluster name).
 This runs four phases in order:
 
 1. **infra** — Terraform downloads Ubuntu 24.04 cloud image, creates 3 VMs with cloud-init networking and your SSH key
-2. **k3s-install** — Ansible installs k3s on the control plane, joins workers, writes `~/.kube/config`.
+2. **k3s-install** — Ansible installs k3s on the control plane, joins workers, writes `~/.kube/homelab.yaml`.
+   Your `~/.kube/config` is left alone. `mise.toml` sets `KUBECONFIG` to the new file, so mise tasks (and any
+   shell with `mise activate`, inside the repo) use it; elsewhere run `export KUBECONFIG=~/.kube/homelab.yaml`.
+   SSH trusts each node's host key on first connect and keeps it in `ansible/known_hosts` (not in Git).
+   `mise run infra-destroy` (used by `rebuild` and `destroy`) forgets them; if you replace a VM another
+   way, run `ssh-keygen -R <ip> -f ansible/known_hosts` before the next `k3s-install`.
    k3s's own Traefik and ServiceLB are disabled (ArgoCD runs Traefik; MetalLB hands out IPs).
 3. **gitops** — ArgoCD installs, picks up app-of-apps, deploys all charts
 4. **configure** — Ansible hardens the Proxmox host
