@@ -1,5 +1,5 @@
 output "k3s_control_plane_ip" { value = var.k3s_cp_ip }
-output "k3s_worker_ips"       { value = var.k3s_worker_ips }
+output "k3s_worker_ips" { value = var.k3s_worker_ips }
 
 output "next_steps" {
   value = <<-EOT

@@ -1,0 +1,139 @@
+name: validate
+
+on: pull_request
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  charts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.16.4
+
+      - name: Install kubeconform
+        env:
+          KUBECONFORM_VERSION: v0.8.0
+          KUBECONFORM_SHA256: 9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883
+        run: |
+          curl -sSfL -o /tmp/kubeconform.tgz \
+            "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          echo "${KUBECONFORM_SHA256}  /tmp/kubeconform.tgz" | sha256sum -c -
+          sudo tar -xzf /tmp/kubeconform.tgz -C /usr/local/bin kubeconform
+
+      - name: Build, lint and render every chart
+        run: .github/scripts/render-charts.sh "$RUNNER_TEMP/render"
+
+      - name: kubeconform
+        run: |
+          kubeconform -strict -summary -ignore-missing-schemas \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            "$RUNNER_TEMP"/render/*.yaml
+
+      # The checks name the files by service, not by directory.
+      - name: Repo checks on the rendered charts
+        run: |
+          cd "$RUNNER_TEMP/render"
+          ln -s adguard-home.yaml adguard.yaml
+          cd "$GITHUB_WORKSPACE"
+          python3 -I specs/015-pin-metallb-ips/check_ips.py \
+            "$RUNNER_TEMP/render/traefik.yaml" "$RUNNER_TEMP/render/adguard.yaml" "$RUNNER_TEMP/render/metallb.yaml" .
+          python3 -I specs/014-admin-ui-auth/check_auth.py "$RUNNER_TEMP/render" .
+
+  tofu:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          tofu_version: 1.10.6
+          tofu_wrapper: false
+
+      - run: tofu fmt -check -recursive -diff
+
+      # main.tf reads the SSH key with file() when the provider is configured.
+      - name: Validate
+        run: |
+          mkdir -p ~/.ssh
+          echo "placeholder, only so validate can evaluate file()" > ~/.ssh/id_ed25519_homelab
+          tofu init -backend=false -input=false
+          tofu validate
+
+  ansible:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - name: Install ansible-lint and the collections
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet ansible-core==2.21.5 ansible-lint==26.10.1
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/venv/bin/ansible-galaxy" collection install -r ansible/requirements.yml
+
+      # proxmox.yml is only syntax-checked: it has older lint findings that #51
+      # (which edits the same file) would conflict with if fixed here.
+      - run: ansible-lint ansible/playbooks/k3s.yml
+
+      - run: ansible-playbook -i ansible/inventory.yml --syntax-check ansible/playbooks/k3s.yml ansible/playbooks/proxmox.yml
+
+  repo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - run: python3 -I specs/011-nondestructive-mise-all/verify_tasks.py .
+
+      - run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet pyyaml==6.0.2
+          "$RUNNER_TEMP/venv/bin/python" specs/016-pin-k3s-version/check_k3s.py .
+
+  secrets:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # One stable name to require in a branch ruleset.
+  validate:
+    needs: [charts, tofu, ansible, repo, secrets]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: $RESULTS"
+          for r in $RESULTS; do [ "$r" = success ] || exit 1; done

@@ -55,7 +55,7 @@ resource "proxmox_virtual_environment_vm" "k3s_cp" {
     }
   }
 
-  bios       = "ovmf"
+  bios = "ovmf"
   efi_disk {
     datastore_id = var.storage_pool
     file_format  = "raw"
