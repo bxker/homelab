@@ -5,7 +5,7 @@ metadata:
   labels:
     app: adguard-home
 spec:
-  replicas: 1
+  replicas: "two"
   selector:
     matchLabels:
       app: adguard-home
