@@ -14,6 +14,7 @@ for dir in kubernetes/apps/*/*/; do
   [ -n "$name" ] && [ -n "$ns" ] || { echo "::error::$dir/application.yaml: no name or destination namespace"; exit 1; }
   echo "== $app (release $name, namespace $ns)"
   helm dependency build "$dir" > /dev/null
+  [ -f "$dir/Chart.lock" ] && { echo "LOCK $app:"; grep -E "^- name:|^  version:" "$dir/Chart.lock"; }
   helm lint "$dir"
   helm template "$name" "$dir" --namespace "$ns" --include-crds > "$out/$app.yaml"
 done
