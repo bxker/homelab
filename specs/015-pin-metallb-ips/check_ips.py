@@ -2,7 +2,7 @@
 usage: python3 -I check_ips.py <traefik.yaml> <adguard.yaml> <metallb.yaml> <repo root>"""
 import ipaddress as ip, re, subprocess, sys, pathlib
 tr, ag, mb = (pathlib.Path(p).read_text() for p in sys.argv[1:4]); repo = pathlib.Path(sys.argv[4])
-TRAEFIK, DNS, UI = "192.168.1.200", "192.168.1.201", "192.168.1.203"
+TRAEFIK, DNS = "192.168.1.200", "192.168.1.201"  # UI pin (.203) dropped: #46 made the AdGuard UI a ClusterIP behind Traefik
 docs = lambda t: [d for d in t.split("\n---") if d.strip()]
 ok = []
 def check(name, cond, detail=""):
@@ -14,9 +14,8 @@ pin = lambda d: (re.findall(r"metallb\.io/loadBalancerIPs: \"?([\d.,]+)\"?", d) 
 
 t = svc(tr); check("AC1 one Traefik LB Service", len(t) == 1)
 check("AC1 Traefik pinned", t and pin(t[0]) == TRAEFIK, t and pin(t[0]))
-d, u = svc(ag, "adguard-home-dns"), svc(ag, "adguard-home-http")
+d = svc(ag, "adguard-home-dns")
 check("AC2 AdGuard DNS pinned", d and pin(d[0]) == DNS, d and pin(d[0]))
-check("AC2 AdGuard UI pinned", u and pin(u[0]) == UI, u and pin(u[0]))
 g = subprocess.run(["grep", "-rn", "metallb.universe.tf", str(repo / "kubernetes")], capture_output=True, text=True)
 check("AC2 no deprecated metallb.universe.tf key", g.stdout == "", g.stdout.strip())
 rw = re.findall(r'domain: "\*\.homelab\.local"\s+answer: (\S+)', ag)
@@ -32,7 +31,7 @@ for p in docs(mb):
 static = [n for n, (_, a) in pools.items() if a == "false"]
 check("AC5 exactly one autoAssign:false pool", len(static) == 1, str({n: a for n, (_, a) in pools.items()}))
 inside = lambda addr, n: any(a <= ip.ip_address(addr) <= b for a, b in pools[n][0])
-check("AC5 every pin inside the static pool", static and all(inside(x, static[0]) for x in (TRAEFIK, DNS, UI)))
+check("AC5 every pin inside the static pool", static and all(inside(x, static[0]) for x in (TRAEFIK, DNS)))
 spans = sorted(r for rs, _ in pools.values() for r in rs)
 check("AC5 pools don't overlap", all(spans[i][1] < spans[i + 1][0] for i in range(len(spans) - 1)), str(spans))
 l2 = [p for p in docs(mb) if re.search(r"^kind: L2Advertisement\s*$", p, re.M)]

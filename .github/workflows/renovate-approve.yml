@@ -1,15 +1,54 @@
 name: renovate
 
-on: pull_request_target
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled]
 
-permissions:
-  pull-requests: write
+permissions: {}
 
+# Nothing here checks out or runs the PR's code.
 jobs:
   approve:
-    if: github.actor == 'renovate[bot]'
+    # Only Renovate's own PRs and pushes: a person pushing to a Renovate branch is not approved.
+    if: >-
+      github.event.pull_request.user.login == 'renovate[bot]' &&
+      github.event.action != 'labeled' &&
+      github.actor == 'renovate[bot]'
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
-      - env:
+      - name: Approve unless it is a major update
+        env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr review --approve "${{ github.event.pull_request.html_url }}"
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if gh pr view "$PR_URL" --json labels --jq '.labels[].name' | grep -qx major-update; then
+            echo "major-update: left for a person to review"
+            exit 0
+          fi
+          gh pr review --approve "$PR_URL"
+
+  # Renovate adds its labels after opening the PR, so the approval above can land
+  # first. When the label arrives, take that approval back.
+  dismiss-major:
+    if: >-
+      github.event.pull_request.user.login == 'renovate[bot]' &&
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'major-update'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Dismiss this workflow's approval
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh api --paginate "repos/$REPO/pulls/$PR/reviews" \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and .state == "APPROVED") | .id' |
+          while read -r id; do
+            gh api -X PUT "repos/$REPO/pulls/$PR/reviews/$id/dismissals" \
+              -f event=DISMISS -f message="major-update: needs a person's review"
+          done

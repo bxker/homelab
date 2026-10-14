@@ -8,9 +8,7 @@
   },
   "packageRules": [
     {
-      "matchManagers": ["helm-values"],
       "matchUpdateTypes": ["major"],
-      "enabled": true,
       "labels": ["major-update"]
     },
     {
