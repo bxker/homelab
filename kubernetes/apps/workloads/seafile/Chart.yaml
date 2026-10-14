@@ -5,7 +5,7 @@ description: Seafile file sync wrapper chart with MariaDB and Memcached
 dependencies:
   # Official Seafile Helm chart (community edition)
   - name: ce
-    version: "12.*"
+    version: "12.0.4"
     repository: https://haiwen.github.io/seafile-helm-chart/repo
     alias: seafile
 # MariaDB and Memcached are hand-rolled in templates/ using official upstream
