@@ -19,5 +19,9 @@ kubernetes/apps/**/Chart.lock
 # Saved plans (mise run infra) can contain secrets
 terraform/tfplan
 
+# SSH host keys accepted on first connect (ansible/ansible.cfg)
+ansible/known_hosts
+ansible/known_hosts.old
+
 # macOS Finder metadata
 .DS_Store

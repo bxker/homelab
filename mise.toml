@@ -6,6 +6,8 @@ CP_IP = "192.168.1.100"
 W1_IP = "192.168.1.101"
 W2_IP = "192.168.1.102"
 CLUSTER_NAME = "homelab"
+# Written by `mise run k3s-install` (ansible/playbooks/k3s.yml); ~/.kube/config is left alone
+KUBECONFIG = "{{env.HOME}}/.kube/homelab.yaml"
 
 # ── Tool Versions ──
 # `mise install` gets everything you need
@@ -54,7 +56,19 @@ run = "cd terraform && tofu init && tofu plan"
 [tasks.infra-destroy]
 description = "DESTROY all VMs and their data (tofu asks for confirmation)"
 interactive = true
-run = "cd terraform && tofu init -input=false && tofu destroy"
+# After a successful destroy, forget the VMs' SSH host keys: recreated VMs get new
+# ones, and ansible/ansible.cfg refuses a changed key.
+run = '''
+cd terraform
+tofu init -input=false
+tofu destroy
+cd ..
+if [ -f ansible/known_hosts ]; then
+  for ip in "$CP_IP" "$W1_IP" "$W2_IP"; do
+    ssh-keygen -R "$ip" -f ansible/known_hosts >/dev/null 2>&1 || true
+  done
+fi
+'''
 
 # ══════════════════════════════════════
 # Phase 2: k3s Cluster
@@ -66,7 +80,7 @@ run = """
 echo "Waiting for VMs to boot..."
 for ip in "$CP_IP" "$W1_IP" "$W2_IP"; do
   for i in $(seq 1 60); do
-    if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 ubuntu@$ip true 2>/dev/null; then
+    if ssh -o UserKnownHostsFile=ansible/known_hosts -o StrictHostKeyChecking=accept-new -o ConnectTimeout=3 ubuntu@$ip true 2>/dev/null; then
       echo "  $ip is up"
       break
     fi

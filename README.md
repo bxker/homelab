@@ -109,7 +109,7 @@ cp .env.example .env                                            # Proxmox URL, A
 cp terraform/terraform.tfvars.example terraform/terraform.tfvars  # IPs, SSH key, storage
 
 mise run infra          # Phase 1: provision VMs on Proxmox (asks before destroying anything)
-mise run k3s-install    # Phase 2: install k3s, write ~/.kube/config
+mise run k3s-install    # Phase 2: install k3s, write ~/.kube/homelab.yaml (mise sets KUBECONFIG)
 mise run gitops         # Phase 3: install ArgoCD, app-of-apps and the ArgoCD Ingress
 mise run configure      # Phase 4: configure the Proxmox host
 ```

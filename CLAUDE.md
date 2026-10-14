@@ -16,7 +16,7 @@ All tasks run through `mise`:
 mise run all            # full deploy, non-destructive: cluster (provision+k3s) → gitops → configure
 mise run infra          # tofu apply; asks first if the plan destroys/replaces anything
 mise run rebuild        # DESTROY all VMs + data, then cluster (asks for cluster name)
-mise run k3s-install    # ansible: install k3s, write ~/.kube/config
+mise run k3s-install    # ansible: install k3s, write ~/.kube/homelab.yaml
 mise run gitops         # install ArgoCD + apply app-of-apps
 mise run configure      # ansible: harden Proxmox host
 mise run sync           # apply app-of-apps to existing cluster (not a full gitops reinstall)
@@ -39,7 +39,7 @@ helm template metallb . --namespace metallb-system
 
 1. **Terraform** (`terraform/k3s-vms.tf`) — downloads Ubuntu 24.04 cloud image via `proxmox_virtual_environment_download_file`, creates 3 VMs with static IPs and SSH key injected via cloud-init. Provider: `bpg/proxmox ~0.66`.
 
-2. **Ansible** (`ansible/playbooks/k3s.yml`) — installs k3s on control plane (`--cluster-init`), joins workers via node token, patches kubeconfig server address from `127.0.0.1` to the CP IP, writes to `~/.kube/config`. Every node installs `k3s_version` from `ansible/inventory.yml` (Renovate proposes bumps). The playbook never upgrades a node: its first play stops if an installed node runs a different version, so upgrade the nodes before merging a bump. Workers read the join token from `/etc/rancher/k3s/config.yaml` (0600), never from a command line. The server's `/etc/rancher/k3s/config.yaml` disables k3s's bundled Traefik and ServiceLB (`tasks/k3s-disable-bundled.yml`). On a server that still runs them, the playbook migrates once, keeping the `traefik.io` CRDs (see `docs/GETTING-STARTED.md`).
+2. **Ansible** (`ansible/playbooks/k3s.yml`) — installs k3s on control plane (`--cluster-init`), joins workers via node token, patches kubeconfig server address from `127.0.0.1` to the CP IP, writes `~/.kube/homelab.yaml` (never `~/.kube/config`; `mise.toml` sets `KUBECONFIG` to it). SSH uses trust-on-first-use host keys in `ansible/known_hosts` (gitignored); `mise run infra-destroy` clears them. Every node installs `k3s_version` from `ansible/inventory.yml` (Renovate proposes bumps). The playbook never upgrades a node: its first play stops if an installed node runs a different version, so upgrade the nodes before merging a bump. Workers read the join token from `/etc/rancher/k3s/config.yaml` (0600), never from a command line. The server's `/etc/rancher/k3s/config.yaml` disables k3s's bundled Traefik and ServiceLB (`tasks/k3s-disable-bundled.yml`). On a server that still runs them, the playbook migrates once, keeping the `traefik.io` CRDs (see `docs/GETTING-STARTED.md`).
 
 3. **ArgoCD** bootstrapped manually once via `mise run gitops` — applies the upstream v2.13.3 install manifest, then `kubernetes/bootstrap/argocd-install.yaml` (ConfigMap setting `server.insecure: "true"`). After bootstrap, ArgoCD self-manages everything. `kubernetes/bootstrap/argocd-ingress.yaml` adds a Traefik Ingress at `argocd.homelab.local` once Traefik is synced.
 
