@@ -1,0 +1,13 @@
+# ArgoCD managing itself. The base is the same pinned upstream manifest that
+# `mise run gitops` installs, so ArgoCD adopts the running objects in place.
+# Upgrade by bumping the version in the URL, one minor at a time (#25 part B),
+# reading https://argo-cd.readthedocs.io/en/stable/operator-manual/upgrading/ first.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocd
+resources:
+  - https://raw.githubusercontent.com/argoproj/argo-cd/v2.13.3/manifests/install.yaml
+  - ingress.yaml
+patches:
+  - path: argocd-cmd-params-cm.yaml
+  - path: argocd-cm.yaml

@@ -1,0 +1,16 @@
+# Ignore terminatingReplicas in workload status: added in k8s 1.32, not in
+# ArgoCD 2.13's schema, causes a ComparisonError on every app with workloads.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+data:
+  resource.customizations.ignoreDifferences.apps_Deployment: |
+    jsonPointers:
+    - /status/terminatingReplicas
+  resource.customizations.ignoreDifferences.apps_StatefulSet: |
+    jsonPointers:
+    - /status/terminatingReplicas
+  resource.customizations.ignoreDifferences.apps_DaemonSet: |
+    jsonPointers:
+    - /status/terminatingReplicas

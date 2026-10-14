@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    # Diff against what the API server would store, so defaulted fields don't show as drift
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/bxker/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/infrastructure/argocd
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    # prune stays off for ArgoCD itself: a bad render must never delete the
+    # controller, the CRDs or argocd-secret. Leftovers are removed by hand.
+    automated: { prune: false, selfHeal: true }
+    syncOptions: [ServerSideApply=true]

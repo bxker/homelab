@@ -70,12 +70,10 @@ homelab/
 │       └── proxmox.yml
 │
 ├── kubernetes/                ← GitOps manifests (wrapper charts)
-│   ├── bootstrap/
-│   │   ├── argocd-install.yaml
-│   │   └── argocd-ingress.yaml
 │   └── apps/
 │       ├── app-of-apps.yaml
 │       ├── infrastructure/
+│       │   ├── argocd/        ← kustomization.yaml: ArgoCD manages itself
 │       │   ├── metallb/       ← Chart.yaml + values.yaml + templates/
 │       │   ├── traefik/
 │       │   ├── cert-manager/

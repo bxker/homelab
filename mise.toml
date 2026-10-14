@@ -128,9 +128,10 @@ run = """
 kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 
 echo "Installing ArgoCD..."
-kubectl apply -n argocd \
-  -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.13.3/manifests/install.yaml
-kubectl apply -n argocd -f kubernetes/bootstrap/argocd-install.yaml
+# The same objects the `argocd` app then manages: the pinned upstream manifest plus
+# patches (kubernetes/apps/infrastructure/argocd). Server-side, as ArgoCD applies it,
+# and because the ApplicationSet CRD is too big for client-side apply.
+kubectl apply --server-side --force-conflicts -k kubernetes/apps/infrastructure/argocd
 
 echo "Waiting for ArgoCD to be ready..."
 kubectl wait --for=condition=available deployment/argocd-server \
@@ -138,8 +139,6 @@ kubectl wait --for=condition=available deployment/argocd-server \
 
 echo "Deploying app-of-apps..."
 kubectl apply -f kubernetes/apps/app-of-apps.yaml
-# Served once Traefik and cert-manager sync; an Ingress can exist before them
-kubectl apply -f kubernetes/bootstrap/argocd-ingress.yaml
 
 echo ""
 echo "ArgoCD is running. Apps will sync automatically."
