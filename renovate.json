@@ -3,10 +3,20 @@
   "extends": [
     "config:recommended"
   ],
-  "helm-values": {
-    "managerFilePatterns": ["/kubernetes/.+/Chart\\.yaml$/"]
+  "kubernetes": {
+    "managerFilePatterns": ["/kubernetes/apps/.+/templates/.+\\.yaml$/"]
   },
   "packageRules": [
+    {
+      "description": "Wait for a release to settle before proposing it",
+      "matchPackageNames": ["*"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "One PR for everything that changes in the monitoring stack",
+      "matchFileNames": ["kubernetes/apps/infrastructure/prometheus-stack/**"],
+      "groupName": "kube-prometheus-stack"
+    },
     {
       "matchUpdateTypes": ["major"],
       "labels": ["major-update"]

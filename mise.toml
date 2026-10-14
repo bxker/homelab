@@ -11,11 +11,13 @@ CLUSTER_NAME = "homelab"
 # `mise install` gets everything you need
 
 [tools]
-opentofu = "latest"
-kubectl  = "latest"
-helm     = "latest"
-ansible  = "latest"
-pipx = "latest"
+# Exact versions so Renovate's mise manager proposes bumps. helm stays on 3.x to
+# match CI (.github/workflows/validate.yml); take 4.x as its own change.
+opentofu = "1.13.1"
+kubectl  = "1.37.1"
+helm     = "3.22.0"
+ansible  = "14.5.0"
+pipx     = "1.17.14"
 
 # ══════════════════════════════════════
 # Phase 1: Infrastructure

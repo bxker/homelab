@@ -1,6 +1,6 @@
 ---
 # Installed in CI with `ansible-galaxy collection install -r ansible/requirements.yml`
-# (proxmox.yml uses ansible.posix.sysctl). Renovate doesn't track this file.
+# (proxmox.yml uses ansible.posix.sysctl). Renovate's ansible-galaxy manager tracks it.
 collections:
   - name: ansible.posix
     version: 2.2.2
