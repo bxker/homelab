@@ -31,7 +31,17 @@ jobs:
           echo "${KUBECONFORM_SHA256}  /tmp/kubeconform.tgz" | sha256sum -c -
           sudo tar -xzf /tmp/kubeconform.tgz -C /usr/local/bin kubeconform
 
-      - name: Build, lint and render every chart
+      - name: Install kustomize
+        env:
+          KUSTOMIZE_VERSION: v5.8.3
+          KUSTOMIZE_SHA256: cb9e31198d3f63b44848bd0afc4c8efc56e6cfef9c93a4a39a211940e6decd61
+        run: |
+          curl -sSfL -o /tmp/kustomize.tgz \
+            "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
+          echo "${KUSTOMIZE_SHA256}  /tmp/kustomize.tgz" | sha256sum -c -
+          sudo tar -xzf /tmp/kustomize.tgz -C /usr/local/bin kustomize
+
+      - name: Build, lint and render every app
         run: .github/scripts/render-charts.sh "$RUNNER_TEMP/render"
 
       - name: kubeconform
