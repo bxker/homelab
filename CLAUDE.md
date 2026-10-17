@@ -41,7 +41,7 @@ helm template metallb . --namespace metallb-system
 
 2. **Ansible** (`ansible/playbooks/k3s.yml`) — installs k3s on control plane (`--cluster-init`), joins workers via node token, patches kubeconfig server address from `127.0.0.1` to the CP IP, writes `~/.kube/homelab.yaml` (never `~/.kube/config`; `mise.toml` sets `KUBECONFIG` to it). SSH uses trust-on-first-use host keys in `ansible/known_hosts` (gitignored); `mise run infra-destroy` clears them. Every node installs `k3s_version` from `ansible/inventory.yml` (Renovate proposes bumps). The playbook never upgrades a node: its first play stops if an installed node runs a different version, so upgrade the nodes before merging a bump. Workers read the join token from `/etc/rancher/k3s/config.yaml` (0600), never from a command line. The server's `/etc/rancher/k3s/config.yaml` disables k3s's bundled Traefik and ServiceLB and exposes controller-manager (10257), scheduler (10259) and etcd (2381) metrics for Prometheus (`tasks/k3s-disable-bundled.yml`); changing it restarts k3s. On a server that still runs them, the playbook migrates once, keeping the `traefik.io` CRDs (see `docs/GETTING-STARTED.md`).
 
-3. **ArgoCD** manages itself: `kubernetes/apps/infrastructure/argocd/` is a Kustomize app (not a wrapper chart) over the pinned upstream v2.13.3 `install.yaml`, plus patches for `argocd-cmd-params-cm` (`server.insecure`) and `argocd-cm` (`terminatingReplicas` ignoreDifferences) and the `argocd.homelab.local` Ingress. `mise run gitops` bootstraps by applying that same directory server-side, then app-of-apps; from then on the `argocd` app (wave 0, `prune: false`, ServerSideApply) keeps it in sync. Upgrade by bumping the version in the URL, one minor at a time. The argo-helm chart can't adopt an install made from the upstream manifest: its workload selectors add `app.kubernetes.io/instance`, which is immutable.
+3. **ArgoCD** manages itself: `kubernetes/apps/infrastructure/argocd/` is a Kustomize app (not a wrapper chart) over the pinned upstream v2.13.3 `install.yaml`, plus patches for `argocd-cmd-params-cm` (`server.insecure`) and `argocd-cm` (`terminatingReplicas` ignoreDifferences, Application health check) and the `argocd.homelab.local` Ingress. `mise run gitops` bootstraps by applying that same directory server-side, then app-of-apps; from then on the `argocd` app (wave 0, `prune: false`, ServerSideApply) keeps it in sync. Upgrade by bumping the version in the URL, one minor at a time. The argo-helm chart can't adopt an install made from the upstream manifest: its workload selectors add `app.kubernetes.io/instance`, which is immutable.
 
 ### GitOps Structure
 
@@ -77,10 +77,15 @@ ArgoCD runs `helm dependency build` automatically. Never commit the `charts/` di
 
 All apps use `argocd.argoproj.io/sync-wave` annotations in `application.yaml` to control ordering. Approximate wave assignments: MetalLB (1) → Traefik / cert-manager / AdGuard Home (2) → Longhorn (3) → OpenBao (4) → External Secrets Operator (5) → Prometheus Stack / Tailscale / Ingress auth (6) → Seafile (10).
 
+app-of-apps waits for each wave's child Applications to be Healthy before it applies the next wave (Application health check in `kubernetes/apps/infrastructure/argocd/argocd-cm.yaml`). A fresh bootstrap stops at OpenBao (wave 4) until it is initialized and unsealed (`vault-init`, `vault-unseal`); waves 6–10 also need `vault-setup` and the OpenBao secrets. Every child carries `syncPolicy.retry` (limit 10, 10s→5m), and CI (`.github/scripts/check-apps.py`) fails a child without a sync-wave or retry. Limits seen in the lab:
+- Only a child that is Progressing (and briefly Missing) holds a wave. A Degraded child holds later waves for about 10 s.
+- A child whose only resources are CRs can report Healthy before they exist. Put an ordering-critical CR in an app that also has a workload, or rely on retry.
+- Once synced, a later commit isn't blocked by an unhealthy earlier wave (ApplyOutOfSyncOnly).
+
 ### Adding a New App
 
 1. Create `kubernetes/apps/workloads/<app>/` with `Chart.yaml`, `values.yaml`, `application.yaml`
-2. Copy `application.yaml` from an existing app of the same kind; update `name`, `path`, `namespace`. Keep `project` (`workloads` or `infrastructure`) and, for workloads, the finalizer
+2. Copy `application.yaml` from an existing app of the same kind; update `name`, `path`, `namespace`. Keep `project` (`workloads` or `infrastructure`), the sync-wave annotation, the `syncPolicy.retry` block and, for workloads, the finalizer
 3. Add the app's namespace to its project's `destinations` in `kubernetes/apps/infrastructure/argocd-projects/appprojects.yaml`
 4. Test locally: `helm dependency build && helm template <app> .`
 5. Commit and push — ArgoCD picks it up automatically

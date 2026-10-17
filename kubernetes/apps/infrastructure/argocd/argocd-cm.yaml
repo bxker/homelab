@@ -14,3 +14,14 @@ data:
   resource.customizations.ignoreDifferences.apps_DaemonSet: |
     jsonPointers:
     - /status/terminatingReplicas
+  # ArgoCD >= 1.8 dropped Application health, so app-of-apps sync waves don't
+  # wait for earlier children to be Healthy. Report each child's own health.
+  resource.customizations.health.argoproj.io_Application: |
+    hs = {}
+    hs.status = "Progressing"
+    hs.message = ""
+    if obj.status ~= nil and obj.status.health ~= nil and obj.status.health.status ~= nil then
+      hs.status = obj.status.health.status
+      if obj.status.health.message ~= nil then hs.message = obj.status.health.message end
+    end
+    return hs

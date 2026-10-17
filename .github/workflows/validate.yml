@@ -125,6 +125,10 @@ jobs:
           "$RUNNER_TEMP/venv/bin/pip" install --quiet pyyaml==6.0.2
           "$RUNNER_TEMP/venv/bin/python" specs/016-pin-k3s-version/check_k3s.py .
 
+      # Own step, so a check_k3s failure above can't hide it.
+      - if: ${{ !cancelled() }}
+        run: '"$RUNNER_TEMP/venv/bin/python" .github/scripts/check-apps.py .'
+
   secrets:
     runs-on: ubuntu-latest
     permissions:
