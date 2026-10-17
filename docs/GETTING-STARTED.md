@@ -104,7 +104,9 @@ This runs four phases in order:
    `mise run infra-destroy` (used by `rebuild` and `destroy`) forgets them; if you replace a VM another
    way, run `ssh-keygen -R <ip> -f ansible/known_hosts` before the next `k3s-install`.
    k3s's own Traefik and ServiceLB are disabled (ArgoCD runs Traefik; MetalLB hands out IPs).
-3. **gitops** — ArgoCD installs, picks up app-of-apps, deploys all charts
+3. **gitops** — ArgoCD installs, picks up app-of-apps, deploys all charts in sync waves. Each wave waits
+   until the previous one is Healthy. On a fresh cluster ArgoCD stops at OpenBao (wave 4) until you
+   initialize and unseal it in Step 6 (`mise run vault-init`, then `mise run vault-unseal`).
 4. **configure** — Ansible hardens the Proxmox host
 
 ### Migrating a cluster that still runs k3s's bundled Traefik
@@ -164,6 +166,11 @@ mise run vault-unseal
 mise run vault-setup
 # (prompts for root token)
 ```
+
+On a fresh cluster ArgoCD waits at wave 4, because OpenBao reports Progressing until it is
+initialized and unsealed. External Secrets (wave 5) and the later waves sync on their own
+after `mise run vault-unseal`. You don't need a manual sync. In the lab, app-of-apps kept its sync
+running and resumed once OpenBao's wave turned Healthy.
 
 Then write secrets into OpenBao:
 
@@ -237,6 +244,19 @@ is still attached to the old pod on another node. Delete the old pod to let it m
 `kubectl -n monitoring delete pod <old-grafana-pod>`.
 
 > **Note:** OpenBao must be re-unsealed after every pod restart (2 of 3 keys). Run `mise run vault-unseal` when the pod restarts.
+> A sealed OpenBao doesn't block later commits to apps that already synced, or new apps in a sync
+> that doesn't include OpenBao. It holds waves 5 and later only when the same app-of-apps sync also
+> applies OpenBao.
+
+### If app-of-apps looks stuck
+
+`argocd app get app-of-apps` shows `waiting for healthy state of …` and names the app it waits on.
+Fix that app, or end the operation with `argocd app terminate-op app-of-apps`.
+
+To remove the health gate, revert the PR that added it. The `argocd` app's own sync then drops the
+`resource.customizations.health.argoproj.io_Application` key from `argocd-cm`. If you ran
+`mise run gitops` after that PR merged, its server-side apply also owns the key, so run
+`mise run gitops` again after the revert.
 
 ## Step 7: Set Up Tailscale
 

@@ -77,10 +77,15 @@ ArgoCD runs `helm dependency build` automatically. Never commit the `charts/` di
 
 All apps use `argocd.argoproj.io/sync-wave` annotations in `application.yaml` to control ordering. Approximate wave assignments: MetalLB (1) → Traefik / cert-manager / AdGuard Home (2) → Longhorn (3) → OpenBao (4) → External Secrets Operator (5) → Prometheus Stack / Tailscale / Ingress auth (6) → Seafile (10).
 
+app-of-apps waits for each wave's child Applications to be Healthy before it applies the next wave (Application health check in `kubernetes/apps/infrastructure/argocd/argocd-cm.yaml`). A fresh bootstrap stops at OpenBao (wave 4) until `mise run vault-unseal`. Every child carries `syncPolicy.retry` (limit 10, 10s→5m), and CI (`.github/scripts/check-apps.py`) fails a child without a sync-wave or retry. Limits seen in the lab:
+- Only Progressing or Missing holds a wave. A Degraded child holds later waves for about 10 s.
+- A child whose only resources are CRs can report Healthy before they exist. Put an ordering-critical CR in an app that also has a workload, or rely on retry.
+- Once synced, a later commit isn't blocked by an unhealthy earlier wave (ApplyOutOfSyncOnly).
+
 ### Adding a New App
 
 1. Create `kubernetes/apps/workloads/<app>/` with `Chart.yaml`, `values.yaml`, `application.yaml`
-2. Copy `application.yaml` from an existing app of the same kind; update `name`, `path`, `namespace`. Keep `project` (`workloads` or `infrastructure`) and, for workloads, the finalizer
+2. Copy `application.yaml` from an existing app of the same kind; update `name`, `path`, `namespace`. Keep `project` (`workloads` or `infrastructure`), the sync-wave annotation, the `syncPolicy.retry` block and, for workloads, the finalizer
 3. Add the app's namespace to its project's `destinations` in `kubernetes/apps/infrastructure/argocd-projects/appprojects.yaml`
 4. Test locally: `helm dependency build && helm template <app> .`
 5. Commit and push — ArgoCD picks it up automatically
