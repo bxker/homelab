@@ -1,3 +1,5 @@
+# The Ingress `mise run gitops` used to apply on its own. Served once Traefik and
+# cert-manager are synced.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
