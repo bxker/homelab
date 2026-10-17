@@ -247,6 +247,46 @@ is still attached to the old pod on another node. Delete the old pod to let it m
    kubectl annotate svc grafana -n monitoring tailscale.com/expose=true
    ```
 
+## Step 8: VM Backups (Proxmox Backup Server)
+
+`mise run configure` sends a nightly backup of every VM (02:00, snapshot mode, keep 7 daily, 4 weekly,
+3 monthly) to a Proxmox Backup Server (PBS) on **another machine**, so a dead Proxmox disk doesn't take
+the backups with it. It replaces the old `vzdump` cron job that wrote to the same disk as the VMs.
+
+**1. Set up PBS (once, outside this repo).** Install PBS on a NAS or spare box, create a datastore, a
+user (for example `backup@pbs`) with the `DatastoreBackup` role on it, and note the server's
+fingerprint (PBS UI → Dashboard → Show Fingerprint).
+
+**2. Put the settings in `.env`** (see `.env.example`): `PBS_SERVER`, `PBS_DATASTORE`, `PBS_USER`,
+`PBS_PASSWORD`, `PBS_FINGERPRINT`. `mise run configure` stops before changing anything if one is missing.
+
+**3. Apply it.**
+
+```bash
+mise run infra-plan   # should show only in-place updates (agent = true), no VM replaced or destroyed
+mise run infra        # asks first if anything would be destroyed or replaced
+mise run k3s-install  # installs qemu-guest-agent on every node
+mise run configure    # adds the pbs storage and the homelab-nightly job, removes the old cron job
+```
+
+**4. Power-cycle each VM once.** Proxmox only adds the guest-agent channel after a full stop and start
+(a reboot from inside the VM isn't enough). Do it one VM at a time from the Proxmox UI, wait for the
+node to be Ready (`kubectl get nodes`), then re-run `mise run k3s-install` so the agent starts.
+Afterwards the VM's Summary page shows its IP addresses.
+
+**5. Check.** Datacenter → Backup shows `homelab-nightly`. Click Run now once and watch the task log;
+the backups appear in the PBS UI under your datastore.
+
+Things to know:
+
+- Existing `pbs` storage and `homelab-nightly` job are left as they are; change them in the UI or delete
+  them and re-run `mise run configure`.
+- Old backups on the `local` storage aren't touched. After the first PBS backup works, delete them in the
+  UI (Storage → local → Backups) to free the disk.
+- Restore one VM: PBS storage → Backups → pick the VM and snapshot → Restore. Restoring a k3s node
+  brings it back with its Longhorn data; see the disaster recovery runbook once it exists (#23).
+- Application-level backups (Longhorn volumes, databases, etcd) are separate (#20).
+
 ## IP Address Plan
 
 | IP              | Purpose                  |
