@@ -167,10 +167,14 @@ mise run vault-setup
 # (prompts for root token)
 ```
 
-On a fresh cluster ArgoCD waits at wave 4, because OpenBao reports Progressing until it is
-initialized and unsealed. External Secrets (wave 5) and the later waves sync on their own
-after `mise run vault-unseal`. You don't need a manual sync. In the lab, app-of-apps kept its sync
-running and resumed once OpenBao's wave turned Healthy.
+On a fresh cluster ArgoCD waits at wave 4. OpenBao is expected to report Progressing until it is
+initialized and unsealed. After `mise run vault-unseal`, External Secrets (wave 5) syncs on its own.
+You don't need a manual sync. In the lab, app-of-apps kept its sync running and resumed once the
+wave it waited on turned Healthy.
+
+Waves 6 to 10 finish only after `mise run vault-setup` and the `bao kv put` commands below.
+Until `secret/grafana` exists, Grafana keeps prometheus-stack (wave 6) Progressing. That is expected
+to hold Seafile (wave 10) for up to about 10 minutes, until Grafana's Deployment turns Degraded.
 
 Then write secrets into OpenBao:
 
@@ -250,13 +254,36 @@ is still attached to the old pod on another node. Delete the old pod to let it m
 
 ### If app-of-apps looks stuck
 
-`argocd app get app-of-apps` shows `waiting for healthy state of …` and names the app it waits on.
-Fix that app, or end the operation with `argocd app terminate-op app-of-apps`.
+See what app-of-apps waits on:
 
-To remove the health gate, revert the PR that added it. The `argocd` app's own sync then drops the
-`resource.customizations.health.argoproj.io_Application` key from `argocd-cm`. If you ran
-`mise run gitops` after that PR merged, its server-side apply also owns the key, so run
-`mise run gitops` again after the revert.
+```bash
+kubectl -n argocd get app app-of-apps -o jsonpath='{.status.operationState.message}'
+```
+
+The message reads `waiting for healthy state of …` and names the app. Fix that app, and the
+sync carries on.
+
+To end the operation instead, use the argocd CLI (not installed by `mise install`). With `--core`
+it talks to the cluster through your kubeconfig, so it needs no login. It uses the kube context's
+namespace, so point that at `argocd` first:
+
+```bash
+kubectl config set-context --current --namespace=argocd
+argocd --core app terminate-op app-of-apps
+```
+
+Auto-sync is expected to skip the commit whose sync you ended. Start a sync by hand with
+`argocd --core app sync app-of-apps`, or push a new commit. `mise run sync` doesn't start a sync.
+It only re-applies the app-of-apps manifest.
+
+When you're done, set the namespace back to what it was (`default` in the kubeconfig `k3s-install` writes):
+`kubectl config set-context --current --namespace=default`.
+
+To remove only the health gate, delete the `resource.customizations.health.argoproj.io_Application`
+key from `kubernetes/apps/infrastructure/argocd/argocd-cm.yaml` and commit. The `argocd` app's own
+sync then drops the key from `argocd-cm`. Children keep their `syncPolicy.retry` and CI keeps its
+check. If you ran `mise run gitops` after the health check merged, its server-side apply also owns
+the key, so run `mise run gitops` again after the commit.
 
 ## Step 7: Set Up Tailscale
 
