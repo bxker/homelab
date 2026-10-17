@@ -45,7 +45,11 @@ helm template metallb . --namespace metallb-system
 
 ### GitOps Structure
 
-`kubernetes/apps/app-of-apps.yaml` — root ArgoCD Application. Recurses `kubernetes/apps/` looking for `application.yaml` files. Every app auto-deploys when committed.
+`kubernetes/apps/app-of-apps.yaml` — root ArgoCD Application. Recurses `kubernetes/apps/` looking for `application.yaml` files, plus `infrastructure/argocd-projects/appprojects.yaml` (synced first, wave -1). Every app auto-deploys when committed.
+
+**Projects** (`appprojects.yaml`): every app names one, never `default`. `infrastructure` (all infra apps, ArgoCD itself) may deploy any kind into its listed namespaces; `workloads` (user apps) may deploy namespaced resources only, plus its own Namespace (needed by `CreateNamespace=true`), and never `ResourceQuota` or `LimitRange`. A new app's namespace goes into its project's `destinations`; CI (`.github/scripts/check-projects.py`) fails the PR otherwise.
+
+**Finalizers:** workload Applications carry `resources-finalizer.argocd.argoproj.io`, so deleting the Application deletes what it deployed. Infrastructure Applications don't, so removing one (Longhorn, OpenBao) never cascades into its data.
 
 Each app is a **wrapper Helm chart**:
 ```
@@ -76,9 +80,10 @@ All apps use `argocd.argoproj.io/sync-wave` annotations in `application.yaml` to
 ### Adding a New App
 
 1. Create `kubernetes/apps/workloads/<app>/` with `Chart.yaml`, `values.yaml`, `application.yaml`
-2. Copy `application.yaml` from an existing app; update `name`, `path`, `namespace`
-3. Test locally: `helm dependency build && helm template <app> .`
-4. Commit and push — ArgoCD picks it up automatically
+2. Copy `application.yaml` from an existing app of the same kind; update `name`, `path`, `namespace`. Keep `project` (`workloads` or `infrastructure`) and, for workloads, the finalizer
+3. Add the app's namespace to its project's `destinations` in `kubernetes/apps/infrastructure/argocd-projects/appprojects.yaml`
+4. Test locally: `helm dependency build && helm template <app> .`
+5. Commit and push — ArgoCD picks it up automatically
 
 Update `repoURL` in `app-of-apps.yaml` and all `application.yaml` files to your actual Git remote before first deploy.
 

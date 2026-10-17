@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
 spec:
-  project: default
+  project: infrastructure
   source:
     repoURL: https://github.com/bxker/homelab.git
     targetRevision: main
