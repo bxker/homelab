@@ -3,10 +3,14 @@ kind: Application
 metadata:
   name: seafile
   namespace: argocd
+  # Workloads only: deleting this Application also deletes what it deployed.
+  # Infrastructure apps (Longhorn, OpenBao, ...) never cascade, see CLAUDE.md.
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
   annotations:
     argocd.argoproj.io/sync-wave: "10"
 spec:
-  project: default
+  project: workloads
   source:
     repoURL: https://github.com/bxker/homelab.git
     targetRevision: main

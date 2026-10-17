@@ -8,7 +8,7 @@ metadata:
     # Diff against what the API server would store, so defaulted fields don't show as drift
     argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
-  project: default
+  project: infrastructure
   source:
     repoURL: https://github.com/bxker/homelab.git
     targetRevision: main

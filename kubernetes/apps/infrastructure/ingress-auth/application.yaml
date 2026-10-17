@@ -7,7 +7,7 @@ metadata:
     # After External Secrets (5) and Traefik's CRDs (2)
     argocd.argoproj.io/sync-wave: "6"
 spec:
-  project: default
+  project: infrastructure
   source:
     repoURL: https://github.com/bxker/homelab.git
     targetRevision: main

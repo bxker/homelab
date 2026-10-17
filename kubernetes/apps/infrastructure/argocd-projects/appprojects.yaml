@@ -1,0 +1,52 @@
+# ArgoCD projects: what each group of apps may deploy, and where.
+# app-of-apps creates these itself (its include pattern picks up this file) at
+# wave -1, so they exist before any Application that names them.
+# New app: put its namespace in its project's destinations, or its sync fails
+# with "not permitted in project". CI checks this against the real renders
+# (.github/scripts/check-projects.py).
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: infrastructure
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Cluster services (networking, storage, secrets, monitoring, ArgoCD itself)
+  sourceRepos:
+    - https://github.com/bxker/homelab.git
+  destinations:
+    - { server: https://kubernetes.default.svc, namespace: adguard }
+    - { server: https://kubernetes.default.svc, namespace: argocd }
+    - { server: https://kubernetes.default.svc, namespace: cert-manager }
+    - { server: https://kubernetes.default.svc, namespace: external-secrets }
+    - { server: https://kubernetes.default.svc, namespace: kube-system }
+    - { server: https://kubernetes.default.svc, namespace: longhorn-system }
+    - { server: https://kubernetes.default.svc, namespace: metallb-system }
+    - { server: https://kubernetes.default.svc, namespace: monitoring }
+    - { server: https://kubernetes.default.svc, namespace: openbao }
+    - { server: https://kubernetes.default.svc, namespace: tailscale }
+    - { server: https://kubernetes.default.svc, namespace: traefik }
+  clusterResourceWhitelist:
+    - { group: "*", kind: "*" }
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: workloads
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: User-facing apps; namespaced resources only
+  sourceRepos:
+    - https://github.com/bxker/homelab.git
+  destinations:
+    - { server: https://kubernetes.default.svc, namespace: seafile }
+  # Only the app's own Namespace: CreateNamespace=true goes through this check too
+  # (ArgoCD validates the auto-created Namespace like any other resource).
+  clusterResourceWhitelist:
+    - { group: "", kind: Namespace }
+  namespaceResourceBlacklist:
+    - { group: "", kind: ResourceQuota }
+    - { group: "", kind: LimitRange }

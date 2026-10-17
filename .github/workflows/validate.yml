@@ -61,6 +61,13 @@ jobs:
             "$RUNNER_TEMP/render/traefik.yaml" "$RUNNER_TEMP/render/adguard.yaml" "$RUNNER_TEMP/render/metallb.yaml" .
           python3 -I specs/014-admin-ui-auth/check_auth.py "$RUNNER_TEMP/render" .
 
+      # What ArgoCD would refuse at sync time: wrong namespace or kind for an app's project
+      - name: Apps fit their ArgoCD projects
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet pyyaml==6.0.2
+          "$RUNNER_TEMP/venv/bin/python" .github/scripts/check-projects.py "$RUNNER_TEMP/render"
+
   tofu:
     runs-on: ubuntu-latest
     defaults:
