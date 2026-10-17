@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: adguard-home
+spec:
+  # Keeps one DNS replica up during node drains (the LAN's resolver, see service.yaml)
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: adguard-home
