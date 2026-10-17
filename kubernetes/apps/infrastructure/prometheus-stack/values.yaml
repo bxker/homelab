@@ -35,3 +35,33 @@ kube-prometheus-stack:
 
   nodeExporter:
     enabled: true
+
+  # k3s runs the control plane inside the k3s process on the control-plane VM,
+  # not as pods, so these point at its IP. The server config in
+  # ansible/playbooks/tasks/k3s-disable-bundled.yml makes them listen beyond
+  # localhost. Ports and TLS are explicit rather than left to the chart's guess.
+  kubeControllerManager:
+    endpoints: [192.168.1.100]
+    service:
+      port: 10257
+      targetPort: 10257
+    serviceMonitor:
+      https: true
+      insecureSkipVerify: true
+  kubeScheduler:
+    endpoints: [192.168.1.100]
+    service:
+      port: 10259
+      targetPort: 10259
+    serviceMonitor:
+      https: true
+      insecureSkipVerify: true
+  kubeEtcd:
+    endpoints: [192.168.1.100]
+    service:
+      port: 2381
+      targetPort: 2381
+  # kube-proxy runs on every node; scraping it would need its metrics address
+  # opened on each worker too. Off, which also drops its alert rules.
+  kubeProxy:
+    enabled: false

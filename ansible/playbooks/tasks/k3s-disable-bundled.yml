@@ -4,6 +4,9 @@
 # Traefik, a plain `disable` would make k3s uninstall its traefik-crd chart,
 # deleting every traefik.io CRD and with them every IngressRoute and
 # Middleware. This runs the sequence tested in specs/012-disable-k3s-bundled/lab/.
+#
+# The same server config also exposes the control-plane metrics Prometheus
+# scrapes (kube-prometheus-stack values, #38). Any change to it restarts k3s.
 
 - name: Look for an existing k3s binary
   ansible.builtin.stat:
@@ -34,7 +37,7 @@
     group: root
     mode: "0755"
 
-- name: Write k3s server config (disable bundled Traefik and ServiceLB)
+- name: Write k3s server config (bundled Traefik/ServiceLB off, metrics on)
   ansible.builtin.copy:
     dest: /etc/rancher/k3s/config.yaml
     content: |
@@ -43,6 +46,14 @@
       disable:
         - traefik
         - servicelb
+      # Prometheus scrapes these from the LAN (kube-prometheus-stack values).
+      # Controller-manager (10257) and scheduler (10259) require authentication;
+      # etcd's metrics endpoint (2381) is plain HTTP, read-only.
+      kube-controller-manager-arg:
+        - bind-address=0.0.0.0
+      kube-scheduler-arg:
+        - bind-address=0.0.0.0
+      etcd-expose-metrics: true
     owner: root
     group: root
     mode: "0600"

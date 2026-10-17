@@ -265,3 +265,9 @@ To pin another Service, pick a free IP in .200–.209, add the annotation
 `metallb.io/loadBalancerIPs: <ip>`, and list it here and in
 `kubernetes/apps/infrastructure/metallb/templates/pool.yaml`. If you change Traefik's IP,
 change `traefikIP` in `kubernetes/apps/infrastructure/adguard-home/values.yaml` with it.
+
+Ports on the control plane (192.168.1.100) open to the LAN for Prometheus: 10257
+(controller-manager) and 10259 (scheduler) need a Kubernetes token; 2381 (etcd
+metrics) is plain HTTP and read-only. If you change the control plane's IP, change
+the three `endpoints` in `kubernetes/apps/infrastructure/prometheus-stack/values.yaml`
+with it.
