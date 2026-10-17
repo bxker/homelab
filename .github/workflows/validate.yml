@@ -100,9 +100,7 @@ jobs:
           echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/venv/bin/ansible-galaxy" collection install -r ansible/requirements.yml
 
-      # proxmox.yml is only syntax-checked: it has older lint findings that #51
-      # (which edits the same file) would conflict with if fixed here.
-      - run: ansible-lint ansible/playbooks/k3s.yml
+      - run: ansible-lint ansible/playbooks/k3s.yml ansible/playbooks/proxmox.yml
 
       - run: ansible-playbook -i ansible/inventory.yml --syntax-check ansible/playbooks/k3s.yml ansible/playbooks/proxmox.yml
 
