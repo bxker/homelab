@@ -85,7 +85,7 @@ app-of-apps waits for each wave's child Applications to be Healthy before it app
 ### Adding a New App
 
 1. Create `kubernetes/apps/workloads/<app>/` with `Chart.yaml`, `values.yaml`, `application.yaml`
-2. Copy `application.yaml` from an existing app of the same kind; update `name`, `path`, `namespace`. Keep `project` (`workloads` or `infrastructure`), the sync-wave annotation, the `syncPolicy.retry` block and, for workloads, the finalizer
+2. Copy `application.yaml` from an existing app of the same kind; update `name`, `path`, `namespace`. Keep `project` (`workloads` or `infrastructure`), the sync-wave annotation, the `syncPolicy.retry` block, the Pod Security labels in `syncPolicy.managedNamespaceMetadata` (warn/audit `restricted`; workloads also enforce `baseline`; CI checks warn/audit) and, for workloads, the finalizer
 3. Add the app's namespace to its project's `destinations` in `kubernetes/apps/infrastructure/argocd-projects/appprojects.yaml`
 4. Test locally: `helm dependency build && helm template <app> .`
 5. Commit and push — ArgoCD picks it up automatically

@@ -386,6 +386,27 @@ sync then drops the key from `argocd-cm`. Children keep their `syncPolicy.retry`
 check. If you ran `mise run gitops` after the health check merged, its server-side apply also owns
 the key, so run `mise run gitops` again after the commit.
 
+### Pod Security
+
+Every namespace an app creates carries Pod Security `warn` and `audit` labels at `restricted`.
+`seafile` and `alerting` also enforce `baseline`. The other namespaces enforce nothing yet. That
+comes later, once the warnings show what each app needs (#33). Check the labels:
+
+```bash
+kubectl get ns -L pod-security.kubernetes.io/enforce,pod-security.kubernetes.io/warn
+```
+
+The labels arrive with each app's next sync. If a namespace still shows none after its app synced,
+sync that app by hand (see "If app-of-apps looks stuck" for `argocd --core app sync`).
+
+`warn` shows up as a warning when ArgoCD applies a workload that breaks `restricted`. k3s has no API
+audit log by default, so `audit` records nothing there. To see which running pods a stricter level
+would reject, try it without changing anything:
+
+```bash
+kubectl label --dry-run=server --overwrite ns <namespace> pod-security.kubernetes.io/enforce=baseline
+```
+
 ## Step 7: Set Up Tailscale
 
 1. Go to https://login.tailscale.com/admin/settings/oauth
