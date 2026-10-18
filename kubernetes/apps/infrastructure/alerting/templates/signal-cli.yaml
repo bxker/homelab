@@ -6,6 +6,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: signal-cli-data
   namespace: {{ .Release.Namespace }}
+  annotations:
+    # Holds the linked-device keys: never pruned or deleted with the app (Longhorn reclaim is Delete).
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
 spec:
   accessModes: ["ReadWriteOnce"]
   storageClassName: {{ .Values.signalCli.storageClassName | quote }}
@@ -74,8 +77,12 @@ spec:
               mountPath: /tmp   # s6 runtime, JVM, libsignal native lib (~190Mi per start)
             - name: run
               mountPath: /run   # s6 preinit needs it writable (S6_READ_ONLY_ROOT=1)
+          # values.yaml's cpu/memory, plus ephemeral-storage for the /tmp emptyDir
+          # below, so the pod lands on a node with that much disk free.
+          {{- $res := deepCopy .Values.signalCli.resources }}
+          {{- $_ := set $res "requests" (merge (dict "ephemeral-storage" "256Mi") ($res.requests | default dict)) }}
           resources:
-            {{- toYaml .Values.signalCli.resources | nindent 12 }}
+            {{- toYaml $res | nindent 12 }}
           # JVM start: allow up to 3 min before the other probes take over.
           startupProbe:
             httpGet:

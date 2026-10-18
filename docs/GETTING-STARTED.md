@@ -194,27 +194,32 @@ bao kv put secret/grafana admin_user=admin admin_password="$(openssl rand -base6
 # htpasswd is in apache2-utils / httpd-tools, or: docker run --rm httpd:2.4-alpine htpasswd -nbB ...
 bao kv put secret/ingress-auth htpasswd="$(htpasswd -nbB admin 'YOUR_PASSWORD')"
 
-# Signal alerts and the Watchdog ping. Link Signal first: see "Signal alerts" below.
-bao kv put secret/signal number=+YOUR_NUMBER recipient=YOUR_GROUP_ID_OR_NUMBER
+# Signal alerts: secret/signal comes later, in step 4 of "Signal alerts" below
+# (after linking Signal and checking what is firing).
+# Watchdog ping (healthchecks.io check: see step 5 there)
 bao kv put secret/healthchecks url=YOUR_PING_URL
 ```
 
 ### Signal alerts
 
 Alertmanager sends alerts to Signal through the `alerting` app. Watchdog goes only to a
-healthchecks.io check, which tells you when alerting itself is down. Nothing has to happen
-before the change merges. Until the secrets exist:
+healthchecks.io check, which tells you when alerting itself is down. Until the secrets exist:
 
 - `alerting` and prometheus-stack show Degraded (ExternalSecret not ready). This holds Seafile (wave 10) for only about 10 s.
 - The adapter pod waits in `CreateContainerConfigError`, so no alert reaches Signal.
 - Alertmanager still runs. Only its Watchdog ping fails until `secret/healthchecks` exists.
 
-Set it up after the merge, with `VAULT_ADDR` and `VAULT_TOKEN` set as above.
+Set it up once `alerting` is deployed, with `VAULT_ADDR` and `VAULT_TOKEN` set as above.
+
+Run each port-forward below in the foreground, in its own terminal, and stop it (Ctrl-C) right
+after the step that needs it. While it runs, anything on your machine can use signal-cli's or
+Alertmanager's API without a login, including a web page open in your browser.
 
 1. Link signal-cli to your Signal account as a secondary device:
 
    ```bash
-   kubectl -n alerting port-forward svc/signal-cli 8080:8080 &
+   # own terminal; Ctrl-C after step 2
+   kubectl -n alerting port-forward svc/signal-cli 8080:8080
    ```
 
    Open `http://localhost:8080/v1/qrcodelink?device_name=homelab` in a browser.
@@ -227,15 +232,17 @@ Set it up after the merge, with `VAULT_ADDR` and `VAULT_TOKEN` set as above.
    ```
 
    Copy the alert group's `id` field (it starts with `group.`). To get alerts in a chat with
-   one person instead, use their `+number` as the recipient.
+   one person instead, use their `+number` as the recipient. Stop the signal-cli port-forward.
 
 3. Check what is already firing. The first send after step 4 delivers every firing alert at once.
 
    ```bash
-   kubectl -n monitoring port-forward svc/prometheus-stack-kube-prom-alertmanager 9093:9093 &
+   # own terminal; Ctrl-C when done here (start it again for step 6 if you use a local amtool)
+   kubectl -n monitoring port-forward svc/prometheus-stack-kube-prom-alertmanager 9093:9093
    ```
 
    Open `http://localhost:9093/#/alerts`. Fix or silence the noisy alerts before the next step.
+   Then stop the port-forward.
 
 4. Store the sending number and the recipient:
 
@@ -257,7 +264,8 @@ Set it up after the merge, with `VAULT_ADDR` and `VAULT_TOKEN` set as above.
    If it doesn't, delete the Alertmanager pod once so it remounts the Secret (expected not to be needed).
 
 6. Send a test alert. `mise install` doesn't install `amtool`. Use the one in the Alertmanager
-   release archive with the port-forward from step 3, or run it inside the pod (second command).
+   release archive with the port-forward from step 3 (stop it afterwards), or run it inside the
+   pod (second command).
 
    ```bash
    amtool --alertmanager.url=http://localhost:9093 alert add alertname=SignalTest namespace=alerting \
@@ -281,8 +289,12 @@ Set it up after the merge, with `VAULT_ADDR` and `VAULT_TOKEN` set as above.
    again with step 1, and remove the old `homelab` entry under Linked devices in the Signal app.
 
 Routing lives only in `kubernetes/apps/infrastructure/prometheus-stack/values.yaml`.
-Alertmanager ignores AlertmanagerConfig resources. The adapter and signal-cli have no login.
-NetworkPolicies let only Alertmanager reach the adapter, and only the adapter reach signal-cli.
+Alertmanager ignores AlertmanagerConfig resources. The adapter, signal-cli and Alertmanager's
+API have no login. NetworkPolicies let only Alertmanager reach the adapter, only the adapter
+reach signal-cli, and only Prometheus and Grafana reach Alertmanager. The adapter itself may
+only reach DNS and signal-cli. `kubectl port-forward` still works. The policies stop other pods,
+not the nodes: kube-router lets traffic from a pod's own node through, so processes on the
+nodes and hostNetwork pods can still reach these APIs.
 
 ### Admin UIs behind the shared login
 
