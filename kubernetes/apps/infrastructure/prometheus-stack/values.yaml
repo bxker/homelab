@@ -30,8 +30,69 @@ kube-prometheus-stack:
               requests:
                 storage: 10Gi
 
+  # Alerts go to Signal through the adapter in the alerting app; Watchdog pings
+  # healthchecks.io as a dead-man's switch. Lists (routes, receivers) replace
+  # the chart's; its inhibit_rules and templates are kept by the map merge.
   alertmanager:
-    enabled: false  # Enable later when you set up notifications
+    enabled: true
+    config:
+      route:
+        receiver: signal
+        group_by: [alertname, namespace]
+        repeat_interval: 12h
+        routes:
+          - receiver: healthchecks
+            matchers: ['alertname = "Watchdog"']
+            group_wait: 0s
+            group_interval: 1m
+            # Re-sends land on group_interval ticks, so the real ping is ~every
+            # 2m: well inside the healthchecks.io check (5m period, 10m grace).
+            repeat_interval: 1m
+          - receiver: "null"
+            matchers: ['alertname = "InfoInhibitor"']
+      receivers:
+        - name: signal
+          webhook_configs:
+            - url: http://signal-adapter.alerting.svc:8080/alert
+              send_resolved: true
+        - name: healthchecks
+          webhook_configs:
+            # Ping URL from OpenBao secret/healthchecks, via
+            # templates/healthchecks-secret.yaml and the optional volume below.
+            - url_file: /etc/alertmanager/secrets/alertmanager-healthchecks/url
+              send_resolved: false
+        - name: "null"
+    alertmanagerSpec:
+      # Optional secret volume, not alertmanagerSpec.secrets (a required
+      # mount): if secret/healthchecks is missing the pod still starts and
+      # Signal alerts still flow; only the Watchdog ping fails. The operator
+      # mounts spec.secrets under /etc/alertmanager/secrets/<name>; none are
+      # listed, so this path is free.
+      volumes:
+        - name: alertmanager-healthchecks
+          secret:
+            secretName: alertmanager-healthchecks
+            optional: true
+      volumeMounts:
+        - name: alertmanager-healthchecks
+          mountPath: /etc/alertmanager/secrets/alertmanager-healthchecks
+          readOnly: true
+      # Routing lives only in this file. The chart turns a null selector into
+      # {} (= select every AlertmanagerConfig), so match a label nobody sets.
+      alertmanagerConfigSelector:
+        matchLabels:
+          homelab.local/alertmanager-config: none
+      alertmanagerConfigNamespaceSelector:
+        matchLabels:
+          homelab.local/alertmanager-config: none
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          memory: 128Mi
+      # No storage: silences and notification state live in an emptyDir and
+      # are lost on restart, which at worst re-sends an open alert once.
 
   nodeExporter:
     enabled: true
