@@ -129,6 +129,16 @@ jobs:
       - if: ${{ !cancelled() }}
         run: '"$RUNNER_TEMP/venv/bin/python" .github/scripts/check-apps.py .'
 
+      # Signal adapter tests, in the image the adapter runs. Keep the tag identical to
+      # kubernetes/apps/infrastructure/alerting/templates/signal-adapter.yaml.
+      - name: Signal adapter unit tests
+        if: ${{ !cancelled() }}
+        run: |
+          docker run --rm -e PYTHONDONTWRITEBYTECODE=1 \
+            -v "$PWD/kubernetes/apps/infrastructure/alerting/files:/src:ro" -w /src \
+            python:3.14.8-slim-trixie \
+            python3 -I -W error -m unittest discover -s /src -v
+
   secrets:
     runs-on: ubuntu-latest
     permissions:
