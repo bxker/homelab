@@ -1,0 +1,59 @@
+# The only access control on either API (Owner decision: no adapter token).
+# Ingress only; egress stays open (signal-cli talks to Signal's servers).
+# kubelet probes: kube-router (k3s's NetworkPolicy controller) accepts traffic
+# from the pod's own node (src-type LOCAL) before evaluating policies, so
+# probes need no rule here. kubectl port-forward enters the pod's network
+# namespace and is not filtered either.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+# Adapter: only Alertmanager pods in the monitoring namespace (selector labels
+# prometheus-operator sets on every pod of that Alertmanager).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: signal-adapter-from-alertmanager
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app: signal-adapter
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.alertmanager.namespace }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: alertmanager
+              alertmanager: {{ .Values.alertmanager.name }}
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+# signal-cli: only the adapter.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: signal-cli-from-adapter
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app: signal-cli
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: signal-adapter
+      ports:
+        - protocol: TCP
+          port: 8080

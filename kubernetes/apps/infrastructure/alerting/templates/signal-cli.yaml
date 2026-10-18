@@ -1,0 +1,108 @@
+# signal-cli-rest-api in json-rpc mode. Its API has full control of the linked
+# Signal account and no auth of its own: ClusterIP only, and network-policy.yaml
+# lets only the adapter in. Linked-device keys live on the PVC.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: signal-cli-data
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: {{ .Values.signalCli.storageClassName | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.signalCli.size | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: signal-cli
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: signal-cli
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: signal-cli
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  # One writer on the RWO volume; signal-cli also refuses a second instance.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: signal-cli
+  template:
+    metadata:
+      labels:
+        app: signal-cli
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000   # image's USER signal-api
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: signal-cli
+          image: bbernhard/signal-cli-rest-api:0.101
+          env:
+            - name: MODE
+              value: json-rpc
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /home/.local/share/signal-cli   # SIGNAL_CLI_CONFIG_DIR
+            - name: tmp
+              mountPath: /tmp   # s6 runtime, JVM, libsignal native lib (~190Mi per start)
+            - name: run
+              mountPath: /run   # s6 preinit needs it writable (S6_READ_ONLY_ROOT=1)
+          resources:
+            {{- toYaml .Values.signalCli.resources | nindent 12 }}
+          # JVM start: allow up to 3 min before the other probes take over.
+          startupProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 18
+          readinessProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 4
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: signal-cli-data
+        - name: tmp
+          emptyDir:
+            sizeLimit: 512Mi   # lab: 186Mi after one start; 64Mi got the pod evicted
+        - name: run
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi

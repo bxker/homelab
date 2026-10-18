@@ -1,0 +1,30 @@
+# No upstream chart: signal-cli-rest-api and the adapter are plain manifests in
+# templates/. Images are written literally in templates/ (not here) so
+# Renovate's kubernetes manager can track them.
+# Secrets: OpenBao secret/signal (number, recipient) -> Secret `signal`
+# (templates/external-secret.yaml). Never put them here.
+
+signalCli:
+  # Linked-device keys. Losing this volume means relinking Signal.
+  storageClassName: longhorn
+  size: 1Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 384Mi
+    limits:
+      memory: 768Mi
+
+adapter:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi
+
+# Who may reach the adapter: Alertmanager pods in this namespace (selector labels
+# set by prometheus-operator on every Alertmanager pod).
+alertmanager:
+  namespace: monitoring
+  name: prometheus-stack-kube-prom-alertmanager
