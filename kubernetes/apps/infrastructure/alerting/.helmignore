@@ -1,0 +1,4 @@
+# Only files/signal_adapter.py ships (via .Files.Get); keep tests and caches out of the chart.
+test_*.py
+__pycache__/
+*.pyc

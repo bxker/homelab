@@ -17,6 +17,7 @@ spec:
     - https://github.com/bxker/homelab.git
   destinations:
     - { server: https://kubernetes.default.svc, namespace: adguard }
+    - { server: https://kubernetes.default.svc, namespace: alerting }
     - { server: https://kubernetes.default.svc, namespace: argocd }
     - { server: https://kubernetes.default.svc, namespace: cert-manager }
     - { server: https://kubernetes.default.svc, namespace: external-secrets }

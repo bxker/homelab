@@ -25,6 +25,12 @@
       "matchDepNames": ["k3s-io/k3s"],
       "labels": ["k3s-upgrade"],
       "prBodyNotes": ["Merging only changes what new nodes install. Upgrade existing nodes to this version first, or the k3s playbook's version check stops."]
+    },
+    {
+      "description": "Signal adapter image and the CI image its tests run in: one PR, same tag",
+      "matchDepNames": ["python"],
+      "matchFileNames": [".github/workflows/validate.yml", "kubernetes/apps/infrastructure/alerting/templates/signal-adapter.yaml"],
+      "groupName": "signal-adapter python image"
     }
   ],
   "customManagers": [
@@ -36,6 +42,13 @@
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "k3s-io/k3s",
       "versioningTemplate": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+k3s(?<build>\\d+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "python image the Signal adapter tests run in (docker run in validate.yml)",
+      "managerFilePatterns": ["/^\\.github/workflows/validate\\.yml$/"],
+      "matchStrings": ["\\s(?<depName>python):(?<currentValue>\\d+\\.\\d+\\.\\d+-slim-[a-z]+)\\s"],
+      "datasourceTemplate": "docker"
     }
   ]
 }

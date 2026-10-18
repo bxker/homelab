@@ -75,7 +75,7 @@ ArgoCD runs `helm dependency build` automatically. Never commit the `charts/` di
 
 ### Sync Waves
 
-All apps use `argocd.argoproj.io/sync-wave` annotations in `application.yaml` to control ordering. Approximate wave assignments: MetalLB (1) → Traefik / cert-manager / AdGuard Home (2) → Longhorn (3) → OpenBao (4) → External Secrets Operator (5) → Prometheus Stack / Tailscale / Ingress auth (6) → Seafile (10).
+All apps use `argocd.argoproj.io/sync-wave` annotations in `application.yaml` to control ordering. Approximate wave assignments: MetalLB (1) → Traefik / cert-manager / AdGuard Home (2) → Longhorn (3) → OpenBao (4) → External Secrets Operator (5) → Prometheus Stack / Tailscale / Ingress auth / Alerting (6) → Seafile (10).
 
 app-of-apps waits for each wave's child Applications to be Healthy before it applies the next wave (Application health check in `kubernetes/apps/infrastructure/argocd/argocd-cm.yaml`). A fresh bootstrap stops at OpenBao (wave 4) until it is initialized and unsealed (`vault-init`, `vault-unseal`); waves 6–10 also need `vault-setup` and the OpenBao secrets. Every child carries `syncPolicy.retry` (limit 10, 10s→5m), and CI (`.github/scripts/check-apps.py`) fails a child without a sync-wave or retry. Limits seen in the lab:
 - Only a child that is Progressing (and briefly Missing) holds a wave. A Degraded child holds later waves for about 10 s.
@@ -105,7 +105,8 @@ Update `repoURL` in `app-of-apps.yaml` and all `application.yaml` files to your 
 Secrets are kept out of Git:
 - **`.env`** (gitignored) — Proxmox URL, API token, node name. Loaded by mise via `_.file = ".env"`. See `.env.example` for the template.
 - **`terraform.tfvars`** (gitignored) — SSH public key, IPs, storage pool.
-- **Kubernetes** — app secrets live in OpenBao (`secret/<app>`) and reach the cluster through an `ExternalSecret` in the app's `templates/` (ClusterSecretStore `openbao`). Current keys: `secret/tailscale`, `secret/seafile`, `secret/grafana`, `secret/ingress-auth` (bcrypt htpasswd line for the shared admin-UI login). Never put credentials in `values.yaml`. Grafana's admin password rotation needs an extra step (see `docs/GETTING-STARTED.md`).
+- **Kubernetes** — app secrets live in OpenBao (`secret/<app>`) and reach the cluster through an `ExternalSecret` in the app's `templates/` (ClusterSecretStore `openbao`). Current keys: `secret/tailscale`, `secret/seafile`, `secret/grafana`, `secret/ingress-auth` (bcrypt htpasswd line for the shared admin-UI login), `secret/signal` (`number`, `recipient`), `secret/healthchecks` (`url`). Never put credentials in `values.yaml`. Grafana's admin password rotation needs an extra step (see `docs/GETTING-STARTED.md`).
+- **Alerting:** Alertmanager routing lives only in prometheus-stack's `values.yaml` (AlertmanagerConfig CRs are ignored). The Signal adapter in `alerting` has no login, only NetworkPolicies; a NetworkPolicy in prometheus-stack lets only Prometheus and Grafana reach Alertmanager. kube-router lets node-local traffic (node processes, hostNetwork pods) past all of them. Owner setup: `docs/GETTING-STARTED.md` (Signal alerts).
 - **Admin UIs without their own login** (Longhorn, AdGuard, Traefik dashboard) use the `basic-auth` Traefik Middleware from `kubernetes/apps/infrastructure/ingress-auth/`: add the namespace to its `values.yaml` and annotate the Ingress with `traefik.ingress.kubernetes.io/router.middlewares: <namespace>-basic-auth@kubernetescrd`.
 
 ### Ansible Inventory

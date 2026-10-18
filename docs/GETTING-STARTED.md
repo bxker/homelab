@@ -193,7 +193,108 @@ bao kv put secret/grafana admin_user=admin admin_password="$(openssl rand -base6
 # Store only the bcrypt hash; keep the password in your password manager.
 # htpasswd is in apache2-utils / httpd-tools, or: docker run --rm httpd:2.4-alpine htpasswd -nbB ...
 bao kv put secret/ingress-auth htpasswd="$(htpasswd -nbB admin 'YOUR_PASSWORD')"
+
+# Signal alerts: secret/signal comes later, in step 4 of "Signal alerts" below
+# (after linking Signal and checking what is firing).
+# Watchdog ping (healthchecks.io check: see step 5 there)
+bao kv put secret/healthchecks url=YOUR_PING_URL
 ```
+
+### Signal alerts
+
+Alertmanager sends alerts to Signal through the `alerting` app. Watchdog goes only to a
+healthchecks.io check, which tells you when alerting itself is down. Until the secrets exist:
+
+- `alerting` and prometheus-stack show Degraded (ExternalSecret not ready). This holds Seafile (wave 10) for only about 10 s.
+- The adapter pod waits in `CreateContainerConfigError`, so no alert reaches Signal.
+- Alertmanager still runs. Only its Watchdog ping fails until `secret/healthchecks` exists.
+
+Set it up once `alerting` is deployed, with `VAULT_ADDR` and `VAULT_TOKEN` set as above.
+
+Run each port-forward below in the foreground, in its own terminal, and stop it (Ctrl-C) right
+after the step that needs it. While it runs, anything on your machine can use signal-cli's or
+Alertmanager's API without a login, including a web page open in your browser.
+
+1. Link signal-cli to your Signal account as a secondary device:
+
+   ```bash
+   # own terminal; Ctrl-C after step 2
+   kubectl -n alerting port-forward svc/signal-cli 8080:8080
+   ```
+
+   Open `http://localhost:8080/v1/qrcodelink?device_name=homelab` in a browser.
+   In the Signal app, open Settings → Linked devices → Link new device, and scan the QR code.
+
+2. Create a Signal group for alerts in the Signal app. Then list the groups the linked account sees:
+
+   ```bash
+   curl -s http://localhost:8080/v1/groups/+YOUR_NUMBER
+   ```
+
+   Copy the alert group's `id` field (it starts with `group.`). To get alerts in a chat with
+   one person instead, use their `+number` as the recipient. Stop the signal-cli port-forward.
+
+3. Check what is already firing. The first send after step 4 delivers every firing alert at once.
+
+   ```bash
+   # own terminal; Ctrl-C when done here (start it again for step 6 if you use a local amtool)
+   kubectl -n monitoring port-forward svc/prometheus-stack-kube-prom-alertmanager 9093:9093
+   ```
+
+   Open `http://localhost:9093/#/alerts`. Fix or silence the noisy alerts before the next step.
+   Then stop the port-forward.
+
+4. Store the sending number and the recipient:
+
+   ```bash
+   bao kv put secret/signal number=+YOUR_NUMBER recipient=YOUR_GROUP_ID_OR_NUMBER
+   kubectl -n alerting annotate externalsecret signal force-sync="$(date +%s)" --overwrite
+   ```
+
+   The adapter pod starts by itself once the Secret exists.
+
+5. Create a check on healthchecks.io with period 5 minutes and grace 10 minutes. Store its ping URL:
+
+   ```bash
+   bao kv put secret/healthchecks url=YOUR_PING_URL
+   kubectl -n monitoring annotate externalsecret alertmanager-healthchecks force-sync="$(date +%s)" --overwrite
+   ```
+
+   Alertmanager pings about every 2 minutes. Within a few minutes the check should show a recent ping.
+   If it doesn't, delete the Alertmanager pod once so it remounts the Secret (expected not to be needed).
+
+6. Send a test alert. `mise install` doesn't install `amtool`. Use the one in the Alertmanager
+   release archive with the port-forward from step 3 (stop it afterwards), or run it inside the
+   pod (second command).
+
+   ```bash
+   amtool --alertmanager.url=http://localhost:9093 alert add alertname=SignalTest namespace=alerting \
+     severity=warning --annotation=summary="Test alert from amtool"
+
+   # Or, without a local amtool:
+   kubectl -n monitoring exec alertmanager-prometheus-stack-kube-prom-alertmanager-0 -c alertmanager -- \
+     amtool --alertmanager.url=http://localhost:9093 alert add alertname=SignalTest namespace=alerting \
+     severity=warning --annotation=summary="Test alert from amtool"
+   ```
+
+   A Signal message should arrive within about 30 s. To resolve the alert, run the same
+   `alert add` again with `--end="$(date -u +%Y-%m-%dT%H:%M:%SZ)"` added. If you skip that, it
+   resolves on its own after 5 minutes. The resolved message follows within about 5 minutes.
+
+   To check that the link survives a restart, run
+   `kubectl -n alerting delete pod -l app=signal-cli`, wait for the new pod to be Ready, and
+   send the test alert again. It should arrive without relinking.
+
+7. signal-cli keeps the linked account on a 1Gi Longhorn volume. If that PVC is lost, link
+   again with step 1, and remove the old `homelab` entry under Linked devices in the Signal app.
+
+Routing lives only in `kubernetes/apps/infrastructure/prometheus-stack/values.yaml`.
+Alertmanager ignores AlertmanagerConfig resources. The adapter, signal-cli and Alertmanager's
+API have no login. NetworkPolicies let only Alertmanager reach the adapter, only the adapter
+reach signal-cli, and only Prometheus and Grafana reach Alertmanager. The adapter itself may
+only reach DNS and signal-cli. `kubectl port-forward` still works. The policies stop other pods,
+not the nodes: kube-router lets traffic from a pod's own node through, so processes on the
+nodes and hostNetwork pods can still reach these APIs.
 
 ### Admin UIs behind the shared login
 

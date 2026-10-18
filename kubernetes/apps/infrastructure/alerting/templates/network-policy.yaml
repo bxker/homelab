@@ -1,0 +1,92 @@
+# The only access control on either API (Owner decision: no adapter token).
+# kube-router (k3s's NetworkPolicy controller) accepts traffic from the pod's
+# own node (src-type LOCAL) before evaluating policies: kubelet probes need no
+# rule, but hostNetwork pods and processes on that node also get through.
+# These policies stop other pods, not the nodes. kubectl port-forward enters
+# the pod's network namespace and is not filtered either.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+# Adapter: only Alertmanager pods in the monitoring namespace (selector labels
+# prometheus-operator sets on every pod of that Alertmanager).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: signal-adapter-from-alertmanager
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app: signal-adapter
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.alertmanager.namespace }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: alertmanager
+              alertmanager: {{ .Values.alertmanager.name }}
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+# signal-cli: only the adapter.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: signal-cli-from-adapter
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app: signal-cli
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: signal-adapter
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+# Adapter egress: DNS and signal-cli only. signal-cli's egress stays open
+# (it talks to Signal's servers on the internet).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: signal-adapter-egress
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app: signal-adapter
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns   # k3s CoreDNS
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app: signal-cli
+      ports:
+        - protocol: TCP
+          port: 8080

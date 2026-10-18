@@ -25,3 +25,6 @@ ansible/known_hosts.old
 
 # macOS Finder metadata
 .DS_Store
+
+# Python bytecode (adapter tests)
+__pycache__/

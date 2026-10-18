@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alerting
+  namespace: argocd
+  annotations:
+    # After External Secrets (5) and Longhorn (3); beside prometheus-stack (6)
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  project: infrastructure
+  source:
+    repoURL: https://github.com/bxker/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/infrastructure/alerting
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: alerting
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]
+    # Both pods also meet "restricted" (no warnings in the lab); enforce
+    # baseline as decided at the spec gate, warn/audit on restricted.
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: baseline
+        pod-security.kubernetes.io/warn: restricted
+        pod-security.kubernetes.io/audit: restricted
+    retry:
+      limit: 10
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m

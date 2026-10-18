@@ -1,0 +1,4 @@
+apiVersion: v2
+name: alerting
+version: 1.0.0
+description: Alertmanager to Signal delivery (signal-cli-rest-api and an in-repo webhook adapter)
