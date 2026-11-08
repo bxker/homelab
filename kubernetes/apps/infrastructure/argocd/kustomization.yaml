@@ -11,3 +11,4 @@ resources:
 patches:
   - path: argocd-cmd-params-cm.yaml
   - path: argocd-cm.yaml
+  - path: application-controller-placement.yaml
