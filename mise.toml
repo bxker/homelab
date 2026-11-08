@@ -95,6 +95,10 @@ echo ""
 echo "k3s cluster ready. Try: kubectl get nodes"
 """
 
+[tasks.k3s-upgrade]
+description = "Roll nodes one at a time: drain, upgrade k3s to k3s_version, reboot if required, uncordon"
+run = "cd ansible && ansible-playbook -i inventory.yml playbooks/k3s-upgrade.yml"
+
 # Ordered `run` steps rather than `depends`: mise runs depends in parallel.
 [tasks.cluster]
 description = "Provision VMs and install k3s (non-destructive; safe to re-run)"

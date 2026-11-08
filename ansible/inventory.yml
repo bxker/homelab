@@ -4,7 +4,7 @@ all:
     ansible_python_interpreter: /usr/bin/python3
     # k3s release every node installs (server and agents). The playbook doesn't
     # upgrade nodes that already run k3s: it stops if they run another version,
-    # so bump this only together with an upgrade of the existing nodes.
+    # so after a bump run `mise run k3s-upgrade` before `mise run k3s-install`.
     k3s_version: v1.36.5+k3s1
   children:
     proxmox:
