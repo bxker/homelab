@@ -27,8 +27,8 @@
         quiet: true
       when: k3s_binary.stat.exists
 
-# Longhorn's DaemonSets run on every node, including the (untainted) control
-# plane, so every node needs its prerequisites.
+# Longhorn's DaemonSets run on every node, including the control plane (its
+# taint is only PreferNoSchedule), so every node needs its prerequisites.
 - name: Install Longhorn prerequisites
   hosts: k3s_cp:k3s_workers
   become: true
@@ -165,6 +165,10 @@
           - "{{ ansible_host }}"
           - --tls-san
           - "{{ ansible_host }}"
+          # Soft: the scheduler prefers workers, so the API server keeps its
+          # memory; DaemonSets (Longhorn, MetalLB, node-exporter) still run here.
+          - --node-taint
+          - node-role.kubernetes.io/control-plane=true:PreferNoSchedule
         creates: /usr/local/bin/k3s
       environment:
         INSTALL_K3S_VERSION: "{{ k3s_version }}"
