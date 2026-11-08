@@ -234,10 +234,11 @@ description = "Initialize OpenBao (run once after first deploy)"
 run = """
 kubectl port-forward -n openbao svc/openbao 8200:8200 &
 PF_PID=$!
+# Stop the port-forward even when a step fails, or it holds 8200 for the next run.
+trap 'kill $PF_PID 2>/dev/null' EXIT
 sleep 3
 export VAULT_ADDR=http://127.0.0.1:8200
 bao operator init -key-shares=3 -key-threshold=2
-kill $PF_PID 2>/dev/null
 echo ""
 echo "Save the unseal keys and root token to your password manager."
 echo "You need 2 of 3 keys to unseal."
@@ -248,12 +249,13 @@ description = "Unseal OpenBao (needed after pod restarts)"
 run = """
 kubectl port-forward -n openbao svc/openbao 8200:8200 &
 PF_PID=$!
+# Stop the port-forward even when a step fails, or it holds 8200 for the next run.
+trap 'kill $PF_PID 2>/dev/null' EXIT
 sleep 3
 export VAULT_ADDR=http://127.0.0.1:8200
 echo "Enter unseal key 1:"; bao operator unseal
 echo "Enter unseal key 2:"; bao operator unseal
 bao status
-kill $PF_PID 2>/dev/null
 """
 
 [tasks.vault-setup]
@@ -261,6 +263,8 @@ description = "Configure OpenBao k8s auth and ESO policy (run once after vault-i
 run = """
 kubectl port-forward -n openbao svc/openbao 8200:8200 &
 PF_PID=$!
+# Stop the port-forward even when a step fails, or it holds 8200 for the next run.
+trap 'kill $PF_PID 2>/dev/null' EXIT
 sleep 3
 export VAULT_ADDR=http://127.0.0.1:8200
 
@@ -292,7 +296,6 @@ bao write auth/kubernetes/role/external-secrets \
   policies=external-secrets \
   ttl=24h
 
-kill $PF_PID 2>/dev/null
 echo ""
 echo "OpenBao configured. Run 'mise run vault-write' to add secrets."
 """
