@@ -113,6 +113,12 @@ kube-prometheus-stack:
     serviceMonitor:
       https: true
       insecureSkipVerify: true
+      # k3s serves every component's metrics from one registry, so this target
+      # repeats the apiserver/etcd series the apiserver job already has (~53k).
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: (apiserver|etcd)_.*
+          action: drop
   kubeScheduler:
     endpoints: [192.168.1.100]
     service:
@@ -121,6 +127,18 @@ kube-prometheus-stack:
     serviceMonitor:
       https: true
       insecureSkipVerify: true
+      # Same duplicate apiserver/etcd series as kubeControllerManager.
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: (apiserver|etcd)_.*
+          action: drop
+  # The kubelet on the k3s server repeats them a third time.
+  kubelet:
+    serviceMonitor:
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: (apiserver|etcd)_.*
+          action: drop
   kubeEtcd:
     endpoints: [192.168.1.100]
     service:
