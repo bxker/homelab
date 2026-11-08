@@ -112,6 +112,40 @@
   changed_when: true
   when: k3s_needs_restart | bool
 
+# traefik-crd's uninstall job can lose a race with k3s deleting the job's own
+# ServiceAccount (helm-traefik-crd), then retry forever: "error looking up
+# service account". Its Helm release is already forgotten above, so the job
+# has nothing to remove: once k3s marks the chart for deletion, drop the
+# finalizer that waits on it. Removing it earlier lets k3s add it back.
+- name: Wait for k3s to mark traefik-crd for deletion
+  ansible.builtin.command: >-
+    {{ k3s_bin }} kubectl -n kube-system get helmchart traefik-crd
+    --ignore-not-found -o jsonpath={.metadata.deletionTimestamp}/{.metadata.name}
+  register: k3s_crd_chart
+  until: k3s_crd_chart.stdout == '' or not k3s_crd_chart.stdout.startswith('/')
+  retries: 30
+  delay: 5
+  changed_when: false
+  when: k3s_needs_restart | bool and 'traefik-crd' in k3s_bundled.stdout
+
+- name: Release traefik-crd without waiting for its uninstall job
+  ansible.builtin.command:
+    argv:
+      - "{{ k3s_bin }}"
+      - kubectl
+      - -n
+      - kube-system
+      - patch
+      - helmchart
+      - traefik-crd
+      - --type=merge
+      - -p
+      - "{{ {'metadata': {'finalizers': []}} | to_json }}"
+  register: k3s_crd_chart_patch
+  changed_when: "'patched' in k3s_crd_chart_patch.stdout"
+  failed_when: k3s_crd_chart_patch.rc != 0 and 'NotFound' not in k3s_crd_chart_patch.stderr
+  when: k3s_crd_chart is not skipped and k3s_crd_chart.stdout != ''
+
 - name: Wait for k3s to finish uninstalling its Traefik
   ansible.builtin.command: >-
     {{ k3s_bin }} kubectl -n kube-system get helmchart traefik traefik-crd
