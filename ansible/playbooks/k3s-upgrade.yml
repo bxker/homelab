@@ -1,8 +1,10 @@
 ---
 # Rolling node maintenance, one node at a time, control plane first:
 # drain, upgrade k3s to k3s_version, reboot if the OS asks for it, wait for
-# Ready, uncordon, then wait for Longhorn to heal before the next node.
-# A node that already runs k3s_version and needs no reboot is left alone.
+# Ready, uncordon, then wait for Longhorn to heal and for OpenBao to be
+# unsealed (it prompts) before the next node. A node that already runs
+# k3s_version and needs no reboot is left alone. Stops first if the control
+# plane is short on memory.
 #
 # kubectl runs here (KUBECONFIG from mise.toml), not on a node, so it keeps
 # working while a node restarts. Draining the node that runs the Tailscale
@@ -29,6 +31,33 @@
       ansible.builtin.assert:
         that: k3s_nodes_ready.stdout_lines | reject('search', '=True$') | list | length == 0
         fail_msg: "Not every node is Ready, nothing was changed: {{ k3s_nodes_ready.stdout_lines }}"
+        quiet: true
+
+# Restarting the API server makes every client reconnect and re-list at once.
+# On a 4 GB control plane with ~1 GB free that ran it out of memory: the API
+# answered 503 for 20+ minutes and worker agents couldn't rejoin.
+- name: Check the control plane has memory to spare
+  hosts: k3s_cp
+  gather_facts: false
+
+  vars:
+    k3s_upgrade_min_available_mb: 1536
+
+  tasks:
+    - name: Read available memory
+      ansible.builtin.command:
+        argv: [awk, '/^MemAvailable:/ {print int($2 / 1024)}', /proc/meminfo]
+      register: k3s_cp_available
+      changed_when: false
+
+    - name: Stop if the control plane is short on memory
+      ansible.builtin.assert:
+        that: k3s_cp_available.stdout | int >= k3s_upgrade_min_available_mb
+        fail_msg: >-
+          {{ inventory_hostname }} has {{ k3s_cp_available.stdout }} MB available, below
+          {{ k3s_upgrade_min_available_mb }} MB. Restarting its API server could run it out of
+          memory. Free some or give the VM more, or override with
+          -e k3s_upgrade_min_available_mb=N. Nothing was changed.
         quiet: true
 
 - name: Upgrade and reboot k3s nodes one at a time
@@ -145,3 +174,52 @@
       retries: 90
       delay: 10
       changed_when: false
+
+    # A drain or reboot that restarts openbao-0 leaves it sealed, and
+    # ExternalSecrets stop syncing. Its readiness probe is `bao status`, so
+    # Ready means unsealed. Unsealing needs the keys, so ask rather than wait.
+    - name: Read whether OpenBao is unsealed
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - -n
+          - openbao
+          - get
+          - pod
+          - openbao-0
+          - -o
+          - jsonpath={.status.containerStatuses[0].ready}
+      delegate_to: localhost
+      become: false
+      register: k3s_openbao_ready
+      until: k3s_openbao_ready.stdout in ['true', 'false']
+      retries: 60
+      delay: 10
+      changed_when: false
+
+    - name: Wait for OpenBao to be unsealed
+      ansible.builtin.pause:
+        prompt: >-
+          OpenBao restarted and is sealed. In another terminal run
+          `mise run vault-unseal`, then press Enter here
+      when: k3s_openbao_ready.stdout != 'true'
+
+    - name: Check OpenBao is unsealed
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - -n
+          - openbao
+          - get
+          - pod
+          - openbao-0
+          - -o
+          - jsonpath={.status.containerStatuses[0].ready}
+      delegate_to: localhost
+      become: false
+      register: k3s_openbao_unsealed
+      until: k3s_openbao_unsealed.stdout == 'true'
+      retries: 6
+      delay: 10
+      changed_when: false
+      when: k3s_openbao_ready.stdout != 'true'
