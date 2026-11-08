@@ -7,6 +7,10 @@ resource "proxmox_virtual_environment_download_file" "ubuntu_noble" {
   url                 = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
   file_name           = "noble-server-cloudimg-amd64.img"
   overwrite_unmanaged = true
+  # `current` is republished in place. With size checks on, every new upstream
+  # image replaced this file and, through disk.file_id, every VM. The image only
+  # matters when a VM is created; `mise run rebuild` starts from a fresh download.
+  overwrite = false
 }
 
 # ── Control Plane ──
@@ -73,6 +77,12 @@ resource "proxmox_virtual_environment_vm" "k3s_cp" {
   operating_system { type = "l26" }
   on_boot = true
   machine = "q35"
+
+  # The image only seeds a new disk. A new upstream image must never replace a
+  # running VM (and its Longhorn data); rebuild on purpose with `mise run rebuild`.
+  lifecycle {
+    ignore_changes = [disk[0].file_id]
+  }
 }
 
 # ── Workers ──
@@ -140,4 +150,9 @@ resource "proxmox_virtual_environment_vm" "k3s_workers" {
   operating_system { type = "l26" }
   on_boot = true
   machine = "q35"
+
+  # See k3s_cp: a new upstream image must never replace a running VM.
+  lifecycle {
+    ignore_changes = [disk[0].file_id]
+  }
 }
