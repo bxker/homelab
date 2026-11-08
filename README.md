@@ -67,6 +67,7 @@ homelab/
 │   ├── inventory.yml
 │   └── playbooks/
 │       ├── k3s.yml
+│       ├── k3s-upgrade.yml
 │       └── proxmox.yml
 │
 ├── kubernetes/                ← GitOps manifests (wrapper charts)

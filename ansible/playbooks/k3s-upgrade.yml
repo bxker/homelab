@@ -1,0 +1,147 @@
+---
+# Rolling node maintenance, one node at a time, control plane first:
+# drain, upgrade k3s to k3s_version, reboot if the OS asks for it, wait for
+# Ready, uncordon, then wait for Longhorn to heal before the next node.
+# A node that already runs k3s_version and needs no reboot is left alone.
+#
+# kubectl runs here (KUBECONFIG from mise.toml), not on a node, so it keeps
+# working while a node restarts. Draining the node that runs the Tailscale
+# subnet router moves the router; over Tailscale, expect a short drop.
+
+- name: Check the cluster before touching any node
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Read node readiness
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - nodes
+          - -o
+          - 'jsonpath={range .items[*]}{.metadata.name}={.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}'
+      register: k3s_nodes_ready
+      changed_when: false
+
+    - name: Stop unless every node is Ready
+      ansible.builtin.assert:
+        that: k3s_nodes_ready.stdout_lines | reject('search', '=True$') | list | length == 0
+        fail_msg: "Not every node is Ready, nothing was changed: {{ k3s_nodes_ready.stdout_lines }}"
+        quiet: true
+
+- name: Upgrade and reboot k3s nodes one at a time
+  hosts: k3s_cp:k3s_workers
+  become: true
+  serial: 1
+  any_errors_fatal: true
+  gather_facts: false
+
+  vars:
+    k3s_bin: /usr/local/bin/k3s
+    k3s_install_script: "/usr/local/share/k3s-install-{{ k3s_version }}.sh"
+    # Same arguments as the first install in k3s.yml; the script rewrites the
+    # systemd unit from them, so keep the two in step.
+    k3s_install_args: >-
+      {{ ['server', '--cluster-init', '--node-ip', ansible_host, '--tls-san', ansible_host]
+         if inventory_hostname in groups['k3s_cp'] else ['agent'] }}
+
+  tasks:
+    - name: Read installed k3s version
+      ansible.builtin.command: "{{ k3s_bin }} --version"
+      register: k3s_installed
+      changed_when: false
+
+    - name: Look for a pending OS reboot
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: k3s_reboot_required
+
+    - name: Decide what this node needs
+      ansible.builtin.set_fact:
+        k3s_needs_upgrade: "{{ k3s_version not in k3s_installed.stdout.split() }}"
+        k3s_needs_reboot: "{{ k3s_reboot_required.stat.exists }}"
+
+    - name: Skip a node that is current and needs no reboot
+      ansible.builtin.meta: end_host
+      when: not (k3s_needs_upgrade | bool) and not (k3s_needs_reboot | bool)
+
+    # Retried: if this node runs the Tailscale subnet router, evicting it can
+    # cut this connection until the router starts elsewhere. Drain is idempotent.
+    - name: Drain the node
+      ansible.builtin.command: >-
+        kubectl drain {{ inventory_hostname }} --ignore-daemonsets
+        --delete-emptydir-data --timeout=10m
+      delegate_to: localhost
+      become: false
+      register: k3s_drain
+      until: k3s_drain.rc == 0
+      retries: 3
+      delay: 30
+      changed_when: true
+
+    - name: Download k3s install script for k3s_version
+      ansible.builtin.get_url:
+        url: "https://raw.githubusercontent.com/k3s-io/k3s/{{ k3s_version }}/install.sh"
+        dest: "{{ k3s_install_script }}"
+        mode: "0755"
+      when: k3s_needs_upgrade | bool
+
+    # The install script replaces the binary and restarts k3s; containers keep
+    # running through the restart.
+    - name: Upgrade k3s
+      ansible.builtin.command:
+        argv: "{{ [k3s_install_script] + k3s_install_args }}"
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
+      changed_when: true
+      when: k3s_needs_upgrade | bool
+
+    - name: Reboot the node
+      ansible.builtin.reboot:
+        reboot_timeout: 900
+      when: k3s_needs_reboot | bool
+
+    - name: Wait until the node is Ready on k3s_version
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - node
+          - "{{ inventory_hostname }}"
+          - -o
+          - 'jsonpath={.status.nodeInfo.kubeletVersion}={.status.conditions[?(@.type=="Ready")].status}'
+      delegate_to: localhost
+      become: false
+      register: k3s_node_state
+      until: k3s_node_state.stdout == k3s_version ~ '=True'
+      retries: 60
+      delay: 10
+      changed_when: false
+
+    - name: Uncordon the node
+      ansible.builtin.command: kubectl uncordon {{ inventory_hostname }}
+      delegate_to: localhost
+      become: false
+      changed_when: true
+
+    # The next drain must not take a node while Longhorn still rebuilds
+    # replicas onto this one. Detached volumes report "unknown", so skip them.
+    - name: Wait for every attached Longhorn volume to be healthy
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - -n
+          - longhorn-system
+          - get
+          - volumes.longhorn.io
+          - -o
+          - 'jsonpath={range .items[?(@.status.state=="attached")]}{.status.robustness}{" "}{end}'
+      delegate_to: localhost
+      become: false
+      register: k3s_longhorn_robustness
+      until: k3s_longhorn_robustness.stdout.split() | reject('equalto', 'healthy') | list | length == 0
+      retries: 90
+      delay: 10
+      changed_when: false
