@@ -17,6 +17,10 @@ kube-prometheus-stack:
     persistence:
       enabled: true
       size: 5Gi
+    # The Longhorn PVC is ReadWriteOnce: a rolling update deadlocks when the new pod
+    # lands on another node (Multi-Attach). Stop the old pod first instead.
+    deploymentStrategy:
+      type: Recreate
 
   prometheus:
     prometheusSpec:
