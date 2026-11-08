@@ -73,7 +73,8 @@
     # Same arguments as the first install in k3s.yml; the script rewrites the
     # systemd unit from them, so keep the two in step.
     k3s_install_args: >-
-      {{ ['server', '--cluster-init', '--node-ip', ansible_host, '--tls-san', ansible_host]
+      {{ ['server', '--cluster-init', '--node-ip', ansible_host, '--tls-san', ansible_host,
+          '--node-taint', 'node-role.kubernetes.io/control-plane=true:PreferNoSchedule']
          if inventory_hostname in groups['k3s_cp'] else ['agent'] }}
 
   tasks:
