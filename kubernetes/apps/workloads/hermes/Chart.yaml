@@ -1,0 +1,4 @@
+apiVersion: v2
+name: hermes
+version: 1.0.0
+description: Hermes Agent (Nous Research) on Signal, with signal-cli as a sidecar

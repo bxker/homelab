@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hermes
+  namespace: argocd
+  # Workloads only: deleting this Application also deletes what it deployed
+  # (the PVCs opt out, see templates/hermes.yaml).
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # After External Secrets (5) and Longhorn (3); beside Seafile
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: workloads
+  source:
+    repoURL: https://github.com/bxker/homelab.git
+    targetRevision: main
+    path: kubernetes/apps/workloads/hermes
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hermes
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]
+    # Pod Security: enforce baseline (workload namespace), warn/audit restricted.
+    # The Hermes image starts as root for s6-overlay and drops to UID 10000, so
+    # it can't meet restricted.
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: baseline
+        pod-security.kubernetes.io/warn: restricted
+        pod-security.kubernetes.io/audit: restricted
+    retry:
+      limit: 10
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
