@@ -1,0 +1,131 @@
+# Hermes Agent gateway with signal-cli as a sidecar. signal-cli's HTTP JSON-RPC
+# has no auth and pins the Host header to localhost, so it listens on the pod's
+# 127.0.0.1 only: no Service, nothing else in the cluster can reach it. The
+# agent's own tools (shell, files) run in the hermes container and CAN reach it,
+# so a prompt-injected agent could act on the linked Signal account.
+{{- range $name, $vol := dict "hermes-data" .Values.hermes "signal-cli-data" .Values.signalCli }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    # Holds the ChatGPT login / Signal linked-device keys: never pruned or deleted
+    # with the app (Longhorn reclaim is Delete).
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: {{ $vol.storageClassName | quote }}
+  resources:
+    requests:
+      storage: {{ $vol.size | quote }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hermes
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  # One writer per RWO volume; signal-cli also refuses a second instance per account.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: hermes
+  template:
+    metadata:
+      labels:
+        app: hermes
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        # The image's runtime user; s6 also chowns /opt/data to it at start.
+        fsGroup: 10000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        nodeAffinity:
+          # ~3 GB image and up to 2 Gi of memory: keep it off the 4 GB control plane.
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      containers:
+        - name: hermes
+          image: nousresearch/hermes-agent:v0.23.0
+          args: ["gateway", "run"]
+          env:
+            - name: SIGNAL_HTTP_URL
+              value: http://127.0.0.1:8080
+          envFrom:
+            - secretRef:
+                name: hermes-signal
+          # s6-overlay starts as root, chowns /opt/data and drops to UID 10000
+          # (s6-setuidgid), so it keeps only the capabilities that needs.
+          # Tested with exactly this set and no-new-privileges.
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+              add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "KILL", "SETGID", "SETUID"]
+          volumeMounts:
+            - name: hermes-data
+              mountPath: /opt/data   # HERMES_HOME
+          resources:
+            {{- toYaml .Values.hermes.resources | nindent 12 }}
+        - name: signal-cli
+          image: bbernhard/signal-cli-rest-api:0.101
+          # Only the image's signal-cli binary is used (signal-cli 0.14.8, daemon
+          # --http), not its REST API. Waits until the account is linked
+          # (docs/GETTING-STARTED.md "Hermes Agent"), then serves it on localhost.
+          command:
+            - sh
+            - -c
+            - |
+              until grep -qF "\"$SIGNAL_ACCOUNT\"" /data/data/accounts.json 2>/dev/null; do
+                echo "waiting for $SIGNAL_ACCOUNT to be linked (see docs/GETTING-STARTED.md, Hermes Agent)"
+                sleep 30
+              done
+              exec signal-cli --config /data -a "$SIGNAL_ACCOUNT" daemon --http 127.0.0.1:8080 --receive-mode on-start
+          env:
+            - name: HOME
+              value: /tmp
+            - name: SIGNAL_ACCOUNT
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-signal
+                  key: SIGNAL_ACCOUNT
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10000
+            runAsGroup: 10000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: signal-cli-data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp   # JVM and libsignal's native library (must allow exec)
+          # values.yaml's cpu/memory, plus ephemeral-storage for the /tmp emptyDir.
+          {{- $res := deepCopy .Values.signalCli.resources }}
+          {{- $_ := set $res "requests" (merge (dict "ephemeral-storage" "256Mi") ($res.requests | default dict)) }}
+          resources:
+            {{- toYaml $res | nindent 12 }}
+      volumes:
+        - name: hermes-data
+          persistentVolumeClaim:
+            claimName: hermes-data
+        - name: signal-cli-data
+          persistentVolumeClaim:
+            claimName: signal-cli-data
+        - name: tmp
+          emptyDir:
+            sizeLimit: 512Mi

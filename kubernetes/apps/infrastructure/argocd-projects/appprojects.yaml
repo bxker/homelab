@@ -44,6 +44,7 @@ spec:
     - https://github.com/bxker/homelab.git
   destinations:
     - { server: https://kubernetes.default.svc, namespace: seafile }
+    - { server: https://kubernetes.default.svc, namespace: hermes }
   # Only the app's own Namespace: CreateNamespace=true goes through this check too
   # (ArgoCD validates the auto-created Namespace like any other resource).
   clusterResourceWhitelist:

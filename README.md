@@ -20,7 +20,7 @@ Infrastructure-as-code managed homelab. Single mini PC today, multi-node tomorro
 │    Infrastructure   │   Workloads                           │
 │    ─────────────    │   ─────────                           │
 │    MetalLB          │   Seafile                             │
-│    Traefik          │                                       │
+│    Traefik          │   Hermes Agent (Signal)               │
 │    cert-manager     │                                       │
 │    Longhorn         │                                       │
 │    AdGuard Home     │                                       │
@@ -86,7 +86,8 @@ homelab/
 │       │   ├── tailscale/
 │       │   └── ingress-auth/  ← shared login for admin UIs
 │       └── workloads/
-│           └── seafile/
+│           ├── seafile/
+│           └── hermes/        ← Hermes Agent + signal-cli sidecar
 │
 ├── .github/
 │   └── workflows/

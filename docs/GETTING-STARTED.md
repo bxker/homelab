@@ -458,6 +458,55 @@ Things to know:
   brings it back with its Longhorn data; see the disaster recovery runbook once it exists (#23).
 - Application-level backups (Longhorn volumes, databases, etcd) are separate (#20).
 
+## Hermes Agent (Signal)
+
+The `hermes` app runs [Hermes Agent](https://hermes-agent.nousresearch.com/docs/) with signal-cli as a
+sidecar. signal-cli is a linked device on your Signal account; you talk to the agent through
+**Note to Self**. The model comes from a **ChatGPT subscription** (Hermes's `openai-codex` provider).
+Anthropic doesn't allow Claude Pro/Max logins in third-party tools, so Claude would need an API key.
+
+What it can reach: the internet and DNS only (`templates/network-policy.yaml`). Not the LAN,
+Proxmox, OpenBao, the Kubernetes API or other apps. It runs shell commands inside its own pod,
+and that pod also holds the linked Signal device: a prompt-injected agent could read or send
+Signal messages as you. Unlink it (step 5) if that ever looks wrong.
+
+**1. Store the number in OpenBao** (E.164 with `+`; `allowed_users` is who may talk to the agent):
+
+```bash
+bao kv put secret/hermes signal_account=+YOUR_NUMBER allowed_users=+YOUR_NUMBER
+```
+
+**2. Link Signal.** The signal-cli container waits until the account is linked. Print the link
+URI as a QR code (`brew install qrencode`) and scan it in Signal → Settings → Linked devices →
+Link new device:
+
+```bash
+kubectl -n hermes exec deploy/hermes -c signal-cli -- \
+  signal-cli --config /data link -n hermes-agent | while read -r line; do
+  case "$line" in sgnl://*) printf '%s' "$line" | qrencode -t ansiutf8 ;; *) echo "$line" ;; esac
+done
+```
+
+Within 30 s the container starts the daemon (`kubectl -n hermes logs deploy/hermes -c signal-cli`).
+
+**3. Log in to ChatGPT and pick the model.** Device-code login: open the URL and enter the code.
+
+```bash
+kubectl -n hermes exec -it deploy/hermes -c hermes -- hermes auth add openai-codex
+kubectl -n hermes exec -it deploy/hermes -c hermes -- hermes model   # ChatGPT or Codex Subscription
+kubectl -n hermes rollout restart deploy/hermes
+```
+
+The login lives in `auth.json` on the `hermes-data` volume, and Hermes refreshes it itself. It
+uses your plan's Codex limits, shared with your own Codex use.
+
+**4. Check.** Send yourself a Note to Self; the agent replies there. Messages from anyone else are
+ignored (`SIGNAL_ALLOWED_USERS`), and so are groups.
+
+**5. Remove access.** Signal → Settings → Linked devices → remove `hermes-agent`; revoke the
+ChatGPT session in ChatGPT's settings. Both volumes survive deleting the app (`Prune=false`);
+delete them by hand to wipe the keys and the agent's memory.
+
 ## IP Address Plan
 
 | IP              | Purpose                  |
